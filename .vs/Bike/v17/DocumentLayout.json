@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Unity_Hub\\Bike\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EF6F625B-76E5-73F2-2268-A1D53BE60FED}|Assembly-CSharp.csproj|d:\\unity_hub\\bike\\assets\\demo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EF6F625B-76E5-73F2-2268-A1D53BE60FED}|Assembly-CSharp.csproj|solutionrelative:assets\\demo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Demo.cs",
+              "DocumentMoniker": "D:\\Unity_Hub\\Bike\\Assets\\Demo.cs",
+              "RelativeDocumentMoniker": "Assets\\Demo.cs",
+              "ToolTip": "D:\\Unity_Hub\\Bike\\Assets\\Demo.cs",
+              "RelativeToolTip": "Assets\\Demo.cs",
+              "ViewState": "AgIAAPgBAAAAAAAAAAAAAAUCAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T09:29:32.35Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

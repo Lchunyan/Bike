@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -67,6 +68,13 @@ public class Demo : MonoBehaviour
     private GameObject ViewTrans;
     private Transform Obj321;
 
+    //圈数还是时间
+    private Toggle RoundToggle;
+    private InputField InputRoundText;
+    private Toggle TimeToggle;
+    private InputField InputTimeText;
+    private Text TimeCountdown;
+
 
     public GameObject BiycycleStandardTrans;
     public List<GameObject> BicyclePosList;
@@ -83,6 +91,37 @@ public class Demo : MonoBehaviour
         Obj321 = transform.Find("321");
         Obj321.gameObject.SetActive(false);
 
+        RoundToggle = ViewTrans.transform.Find("RoundToggle").GetComponent<Toggle>();
+        RoundToggle.isOn = false;
+        RoundToggle.onValueChanged.AddListener((ison)=>
+        {
+            if (ison)
+            {
+                TimeToggle.isOn = false;
+            }
+            else
+            {
+                TimeToggle.isOn = true;
+            }
+        });
+        InputRoundText = ViewTrans.transform.Find("InputRound").Find("InputField (Legacy)").GetComponent<InputField>(); 
+        TimeToggle = ViewTrans.transform.Find("TimeToggle").GetComponent<Toggle>();
+        TimeToggle.isOn = true;
+        TimeToggle.onValueChanged.AddListener((ison) =>
+        {
+            if (ison)
+            {
+                RoundToggle.isOn = false;
+            }
+            else
+            {
+                RoundToggle.isOn = true;
+            }
+        });
+        InputTimeText = ViewTrans.transform.Find("InputTime").Find("InputField (Legacy)").GetComponent<InputField>();
+        TimeCountdown = transform.Find("Time_Countdown").Find("time").GetComponent<Text>();
+        TimeCountdown.transform.parent.gameObject.SetActive(false);
+
 
         BiycycleStandardTrans.gameObject.SetActive(false);
         discoveredDevices.Clear();
@@ -93,7 +132,7 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("3"))) DeviceText_4.text = PlayerPrefs.GetString("3");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("4"))) DeviceText_5.text = PlayerPrefs.GetString("4");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("5"))) DeviceText_6.text = PlayerPrefs.GetString("5");
-
+        
     }
     
     // Update is called once per frame
@@ -220,7 +259,7 @@ public class Demo : MonoBehaviour
                                 Invoke("ShowTimeTipsTextFalse", 6f);
                            
 
-                                StartCoroutine(ShowOneChildAt321Time()); 
+                                StartCoroutine(IEnumShowOneChildAt321Time()); 
                                 isFirstTimeScanningDevices = 3;
                             }
                         }
@@ -339,6 +378,7 @@ public class Demo : MonoBehaviour
 
         List<string> deviceNameList = new List<string>();
 
+        PlayerPrefs.DeleteAll();
         if (!string.IsNullOrEmpty(DeviceText_1.text)) deviceNameList.Add(DeviceText_1.text);
         if (!string.IsNullOrEmpty(DeviceText_2.text)) deviceNameList.Add(DeviceText_2.text);
         if (!string.IsNullOrEmpty(DeviceText_3.text)) deviceNameList.Add(DeviceText_3.text);
@@ -349,7 +389,6 @@ public class Demo : MonoBehaviour
 
         for (int i = 0; i < targetDeviceNames.Length; i++)
         {
-            //Debug.Log("设备列表targetDeviceNames:" + targetDeviceNames[i]);
             PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
         }
 
@@ -419,7 +458,7 @@ public class Demo : MonoBehaviour
         ShowTimeTipsText.gameObject.SetActive(false);
     }
 
-    IEnumerator ShowOneChildAt321Time()
+    IEnumerator IEnumShowOneChildAt321Time()
     {
         yield return new WaitForSeconds(0.1f);
         Obj321.gameObject.SetActive(true);
@@ -434,7 +473,7 @@ public class Demo : MonoBehaviour
             }
             // 激活当前要显示的
             Obj321.GetChild(i).gameObject.SetActive(true);
-            StartCoroutine(Time321ChangeBig(Obj321.GetChild(i).transform));
+            StartCoroutine(IEnumTime321ChangeBig(Obj321.GetChild(i).transform));
            
             // 等待 delay 秒
             yield return new WaitForSeconds(1.1f);
@@ -453,7 +492,7 @@ public class Demo : MonoBehaviour
     /// </summary>
     /// <param name="timetrans"></param>
     /// <returns></returns>
-    IEnumerator Time321ChangeBig(Transform timetrans)
+    IEnumerator IEnumTime321ChangeBig(Transform timetrans)
     {
         Vector3 startScale = new Vector3(0.2f, 0.2f, 0.2f);
         Vector3 targetScale = Vector3.one;
@@ -471,6 +510,20 @@ public class Demo : MonoBehaviour
 
         timetrans.localScale = targetScale; // 确保最终完全到位
     }
+
+
+    IEnumerator IEnumTimeCountdown()
+    {
+        yield return new WaitForSeconds(0.1f);
+        TimeCountdown
+
+         yield return new WaitForSeconds(0.3f);
+       
+    }
+
+
+
+
 }
 
 
