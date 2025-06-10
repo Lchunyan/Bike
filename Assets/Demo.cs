@@ -65,8 +65,12 @@ public class Demo : MonoBehaviour
     public InputField DeviceText_5;
     public InputField DeviceText_6;
     public Text ShowTimeTipsText;
-    private GameObject ViewTrans;
+    private GameObject StartViewTrans;
     private Transform Obj321;
+
+    //结算界面
+    private GameObject OverViewTrans;
+    public Text TodayTimeText;
 
     //圈数还是时间
     private Toggle RoundToggle;
@@ -87,11 +91,11 @@ public class Demo : MonoBehaviour
 
     void Start()
     {
-        ViewTrans = transform.Find("View").gameObject;
+        StartViewTrans = transform.Find("StartView").gameObject;//StartView  StartView
         Obj321 = transform.Find("321");
         Obj321.gameObject.SetActive(false);
 
-        RoundToggle = ViewTrans.transform.Find("RoundToggle").GetComponent<Toggle>();
+        RoundToggle = StartViewTrans.transform.Find("RoundToggle").GetComponent<Toggle>();
         RoundToggle.isOn = false;
         RoundToggle.onValueChanged.AddListener((ison)=>
         {
@@ -104,8 +108,8 @@ public class Demo : MonoBehaviour
                 TimeToggle.isOn = true;
             }
         });
-        InputRoundText = ViewTrans.transform.Find("InputRound").Find("InputField (Legacy)").GetComponent<InputField>(); 
-        TimeToggle = ViewTrans.transform.Find("TimeToggle").GetComponent<Toggle>();
+        InputRoundText = StartViewTrans.transform.Find("InputRound").Find("InputField (Legacy)").GetComponent<InputField>(); 
+        TimeToggle = StartViewTrans.transform.Find("TimeToggle").GetComponent<Toggle>();
         TimeToggle.isOn = true;
         TimeToggle.onValueChanged.AddListener((ison) =>
         {
@@ -118,9 +122,17 @@ public class Demo : MonoBehaviour
                 RoundToggle.isOn = true;
             }
         });
-        InputTimeText = ViewTrans.transform.Find("InputTime").Find("InputField (Legacy)").GetComponent<InputField>();
+        InputTimeText = StartViewTrans.transform.Find("InputTime").Find("InputField (Legacy)").GetComponent<InputField>();
         TimeCountdown = transform.Find("Time_Countdown").Find("time").GetComponent<Text>();
         TimeCountdown.transform.parent.gameObject.SetActive(false);
+
+
+        ///结算界面
+        OverViewTrans = transform.Find("OverView").gameObject;
+        TodayTimeText = OverViewTrans.transform.Find("ABLAZING").Find("daytime").GetComponent<Text>();
+        //OverViewTrans.SetActive(false);
+
+
 
 
         BiycycleStandardTrans.gameObject.SetActive(false);
@@ -132,7 +144,8 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("3"))) DeviceText_4.text = PlayerPrefs.GetString("3");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("4"))) DeviceText_5.text = PlayerPrefs.GetString("4");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("5"))) DeviceText_6.text = PlayerPrefs.GetString("5");
-        
+
+
     }
     
     // Update is called once per frame
@@ -141,7 +154,7 @@ public class Demo : MonoBehaviour
         if (isFirstTimeScanningDevices == 1) //第一次查找设备
         {
             ScanningDevicesTime += Time.deltaTime;
-            if (ScanningDevicesTime >= 20)// 第一次定时5秒确认一下个数
+            if (ScanningDevicesTime >= 010)// 第一次定时5秒确认一下个数
             {
                 Debug.Log("ScanningDevicesTime>6------");
                 isFirstTimeScanningDevices = 0;
@@ -254,7 +267,7 @@ public class Demo : MonoBehaviour
                             Debug.Log("已连接..." + dID);
                             if (CloneIndex == discoveredDevices.Count)
                             {
-                                ViewTrans.SetActive(false);
+                                StartViewTrans.SetActive(false);
                                 ShowTimeTipsText.text = "已全部连接...";
                                 Invoke("ShowTimeTipsTextFalse", 6f);
                            
@@ -479,13 +492,26 @@ public class Demo : MonoBehaviour
             yield return new WaitForSeconds(1.1f);
         }
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.2f);
         Obj321.gameObject.SetActive(false);
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].enabled = true;
         }
+
+        yield return new WaitForSeconds(0.1f);
         isFirstTimeScanningDevices = 4;
+
+        //判断是圈数还是时间
+        if(RoundToggle.isOn)
+        {
+            int input_round = int.Parse(InputRoundText.text);
+        }
+        else if(TimeToggle.isOn)
+        {
+            int input_time = int.Parse(InputTimeText.text);
+            StartCoroutine(IEnumTimeCountdown(input_time)); // 倒计时  分钟
+        }                                    
     }
     /// <summary>
     /// 321逐渐变大
@@ -512,13 +538,31 @@ public class Demo : MonoBehaviour
     }
 
 
-    IEnumerator IEnumTimeCountdown()
+    IEnumerator IEnumTimeCountdown(int time)
     {
-        yield return new WaitForSeconds(0.1f);
-        TimeCountdown
+        TimeCountdown.transform.parent.gameObject.SetActive(true);
+        int totalSeconds = time * 60;
 
-         yield return new WaitForSeconds(0.3f);
-       
+        while (totalSeconds > 0)
+        {
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+
+            TimeCountdown.text = string.Format("{0:D2}:{1:D2}", minutes, seconds);
+
+            yield return new WaitForSeconds(1f);
+            totalSeconds--;
+        }
+
+        // 最后显示 00:00
+        TimeCountdown.text = "00:00";
+        //结束
+
+
+        DateTime now = DateTime.Now;
+        // 自定义日期格式：日 + 月英文简称 + 年
+        string formattedDate = now.ToString("dd MMM yyyy");
+        TodayTimeText.text = formattedDate;
     }
 
 
