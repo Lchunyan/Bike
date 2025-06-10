@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -70,6 +71,8 @@ public class Demo : MonoBehaviour
 
     //结算界面
     private GameObject OverViewTrans;
+    private Transform ScrollView1_Trans;
+    private Transform ScrollView2_Trans;
     public Text TodayTimeText;
 
     //圈数还是时间
@@ -130,7 +133,12 @@ public class Demo : MonoBehaviour
         ///结算界面
         OverViewTrans = transform.Find("OverView").gameObject;
         TodayTimeText = OverViewTrans.transform.Find("ABLAZING").Find("daytime").GetComponent<Text>();
-        //OverViewTrans.SetActive(false);
+        ScrollView1_Trans = OverViewTrans.transform.Find("Scroll View1");
+        ScrollView2_Trans = OverViewTrans.transform.Find("Scroll View2");
+        ScrollView2_Trans.gameObject.SetActive(false);   
+
+
+        OverViewTrans.SetActive(false);
 
 
 
@@ -170,7 +178,7 @@ public class Demo : MonoBehaviour
                     }
                     if (targetDeviceNames.Length == discoveredDevices.Count)
                     {
-                        ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请开始连接";  //开始创建
+                        ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请开始连接";  //开始创建----------------------------------------------------
 
                         StartSearch.interactable = false;
                         StartCoroutine(CreateBicyclesWithDelay());
@@ -365,6 +373,7 @@ public class Demo : MonoBehaviour
             BicycleController con = BiycycleObj.transform.GetComponent<BicycleController>();
             con.enabled = false;
             con.DeviceID = did;
+            con.DeviceName = discoveredDevices[did];
             BicycleControllers.Add(con);
             if (LDex == 0)
             {
@@ -556,13 +565,24 @@ public class Demo : MonoBehaviour
 
         // 最后显示 00:00
         TimeCountdown.text = "00:00";
+
         //结束
-
-
+        OverViewTrans.SetActive(true);
         DateTime now = DateTime.Now;
         // 自定义日期格式：日 + 月英文简称 + 年
         string formattedDate = now.ToString("dd MMM yyyy");
         TodayTimeText.text = formattedDate;
+
+        //BicycleControllers的个数 来控制ScrollView的显示
+        if(BicycleControllers.Count<=2)
+        {
+            ScrollView1_Trans.gameObject.SetActive(true);
+        }
+        else if (BicycleControllers.Count <= 6)
+        {
+            ScrollView1_Trans.gameObject.SetActive(true);
+            ScrollView1_Trans.gameObject.SetActive(true);
+        }
     }
 
 

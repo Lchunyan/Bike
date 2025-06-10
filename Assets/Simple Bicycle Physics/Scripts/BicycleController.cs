@@ -61,6 +61,7 @@ namespace SBPScripts
     {
         public GameObject obj;
         public string DeviceID;
+        public string DeviceName;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
         private int currentTargetIndex = 0;
