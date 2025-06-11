@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 public class Demo : MonoBehaviour
 {
-    public int isFirstTimeScanningDevices = 0;
+    private int isFirstTimeScanningDevices = 0;
     public Button StartSearch; //开始查找按钮
     public Button StartConnect; //开始连接按钮
 
@@ -71,8 +71,7 @@ public class Demo : MonoBehaviour
 
     //结算界面
     private GameObject OverViewTrans;
-    private Transform ScrollView1_Trans;
-    private Transform ScrollView2_Trans;
+    private Transform RankTrans;
     public Text TodayTimeText;
 
     //圈数还是时间
@@ -133,12 +132,9 @@ public class Demo : MonoBehaviour
         ///结算界面
         OverViewTrans = transform.Find("OverView").gameObject;
         TodayTimeText = OverViewTrans.transform.Find("ABLAZING").Find("daytime").GetComponent<Text>();
-        ScrollView1_Trans = OverViewTrans.transform.Find("Scroll View1");
-        ScrollView2_Trans = OverViewTrans.transform.Find("Scroll View2");
-        ScrollView2_Trans.gameObject.SetActive(false);   
+        RankTrans = OverViewTrans.transform.Find("Rank");
 
-
-        OverViewTrans.SetActive(false);
+         OverViewTrans.SetActive(false);
 
 
 
@@ -162,9 +158,9 @@ public class Demo : MonoBehaviour
         if (isFirstTimeScanningDevices == 1) //第一次查找设备
         {
             ScanningDevicesTime += Time.deltaTime;
-            if (ScanningDevicesTime >= 010)// 第一次定时5秒确认一下个数
+            if (ScanningDevicesTime >= 15)// 第一次定时5秒确认一下个数
             {
-                Debug.Log("ScanningDevicesTime>6------");
+                Debug.Log("ScanningDevicesTime>15------");
                 isFirstTimeScanningDevices = 0;
                 ScanningDevicesTime = 0;
                 BleApi.StopDeviceScan();
@@ -235,7 +231,7 @@ public class Demo : MonoBehaviour
                                 isFirstTimeScanningDevices = 0;
                                 ScanningDevicesTime = 0;
                                 BleApi.StopDeviceScan();
-
+                                Debug.Log("查找到" + discoveredDevices.Count + "个设备，请开始连接");
                                 ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请开始连接";  //开始创建
 
                                 StartSearch.interactable = false;
@@ -573,15 +569,32 @@ public class Demo : MonoBehaviour
         string formattedDate = now.ToString("dd MMM yyyy");
         TodayTimeText.text = formattedDate;
 
-        //BicycleControllers的个数 来控制ScrollView的显示
-        if(BicycleControllers.Count<=2)
+
+        0
+        // 先对列表按 totalDistance 降序排序 
+        List<BicycleController> sortedList = BicycleControllers
+            .OrderByDescending(b => b.totalDistance)
+            .ToList();
+
+        for (int i = 0; i < BicycleControllers.Count; i++)  //再根据BicycleControllers显示
         {
-            ScrollView1_Trans.gameObject.SetActive(true);
-        }
-        else if (BicycleControllers.Count <= 6)
-        {
-            ScrollView1_Trans.gameObject.SetActive(true);
-            ScrollView1_Trans.gameObject.SetActive(true);
+            Transform perchild = RankTrans.GetChild(i);
+            perchild.gameObject.SetActive(true);
+
+            Text TimeT = perchild.Find("M_time").GetComponent<Text>(); //总时间
+            int input_time = int.Parse(InputTimeText.text);
+            TimeT.text = input_time.ToString("F1");
+
+            Text RankName = perchild.Find("RankName").GetComponent<Text>(); //名字
+            RankName.text = BicycleControllers[i].DeviceName;
+
+            Text DisText = perchild.Find("+dis").Find("dis").GetComponent<Text>(); //总公里
+            float itotaldis = BicycleControllers[i].totalDistance;
+            DisText.text = itotaldis.ToString();
+
+            Text SpeedText = perchild.Find("+speed").Find("speed").GetComponent<Text>(); //总公里/时间
+            float pjspeed = itotaldis / input_time;
+            SpeedText.text = pjspeed.ToString("F1");
         }
     }
 
