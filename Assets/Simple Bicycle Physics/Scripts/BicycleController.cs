@@ -59,9 +59,9 @@ namespace SBPScripts
     }
     public class BicycleController : MonoBehaviour
     {
-        public GameObject obj;
         public string DeviceID;
         public string DeviceName;
+        public float totalDistance = 0f;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
         private int currentTargetIndex = 0;
@@ -115,7 +115,7 @@ namespace SBPScripts
         float oscillationSteerEffect;
         [HideInInspector]
         public float cycleOscillation;
-        [HideInInspector]
+        
         public Rigidbody rb, fWheelRb, rWheelRb;
         float turnAngle;
         float xQuat, zQuat;
@@ -161,7 +161,7 @@ namespace SBPScripts
         public WayPointSystem wayPointSystem;
         public AirTimeSettings airTimeSettings;
 
-        public float totalDistance = 0f;
+       
         private Vector3 lastPosition;
 
         void Awake()

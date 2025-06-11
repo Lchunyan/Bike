@@ -429,7 +429,7 @@ MonoBehaviour:
     m_Value: 64
   m_VolumetricFogBudget:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 0.333
   m_ResolutionDepthRatio:
     m_OverrideState: 1
     m_Value: 0.5
@@ -933,7 +933,7 @@ MonoBehaviour:
     m_Value: 0.15
   m_SampleCount:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 8
 --- !u!114 &5873148186128759355
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1295,10 +1295,10 @@ MonoBehaviour:
     m_Value: 0
   m_MaximumRadiusInPixels:
     m_OverrideState: 1
-    m_Value: 40
+    m_Value: 32
   m_BilateralUpsample:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   m_DirectionCount:
     m_OverrideState: 1
     m_Value: 2

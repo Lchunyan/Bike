@@ -5,7 +5,7 @@ namespace SBPScripts
 {
     public class CyclistAnimController : MonoBehaviour
     {
-        BicycleController bicycleController;
+        public BicycleController bicycleController;
         Animator anim;
         string clipInfoCurrent, clipInfoLast;
         [HideInInspector]
@@ -24,7 +24,7 @@ namespace SBPScripts
         float waitTime, prevLocalPosX;
         void Start()
         {
-            bicycleController = FindObjectOfType<BicycleController>();
+            //bicycleController = FindObjectOfType<BicycleController>();
             bicycleStatus = FindObjectOfType<BicycleStatus>();
             rig = hipIK.transform.parent.gameObject.GetComponent<Rig>();
             if (bicycleStatus != null)
