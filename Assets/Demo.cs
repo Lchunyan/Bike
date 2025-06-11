@@ -80,6 +80,8 @@ public class Demo : MonoBehaviour
     private Toggle TimeToggle;
     private InputField InputTimeText;
     private Text TimeCountdown;
+    private Button RestartBtn;
+    private Button BackBtn;
 
 
     public GameObject BiycycleStandardTrans;
@@ -133,10 +135,13 @@ public class Demo : MonoBehaviour
         OverViewTrans = transform.Find("OverView").gameObject;
         TodayTimeText = OverViewTrans.transform.Find("ABLAZING").Find("daytime").GetComponent<Text>();
         RankTrans = OverViewTrans.transform.Find("Rank");
+        OverViewTrans.SetActive(false);
 
-         OverViewTrans.SetActive(false);
-
-
+        RestartBtn = OverViewTrans.transform.Find("Restart").GetComponent<Button>();
+        RestartBtn.onClick.AddListener(OnRestartClicked);
+        BackBtn = OverViewTrans.transform.Find("Back").GetComponent<Button>();
+        BackBtn.onClick.AddListener(OnBackClicked);
+        
 
 
         BiycycleStandardTrans.gameObject.SetActive(false);
@@ -148,7 +153,7 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("3"))) DeviceText_4.text = PlayerPrefs.GetString("3");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("4"))) DeviceText_5.text = PlayerPrefs.GetString("4");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("5"))) DeviceText_6.text = PlayerPrefs.GetString("5");
-
+        if (!string.IsNullOrEmpty(PlayerPrefs.GetString("InputTimeText"))) InputTimeText.text = PlayerPrefs.GetString("InputTimeText");
 
     }
     
@@ -404,11 +409,13 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(DeviceText_5.text)) deviceNameList.Add(DeviceText_5.text);
         if (!string.IsNullOrEmpty(DeviceText_6.text)) deviceNameList.Add(DeviceText_6.text);
         targetDeviceNames = deviceNameList.ToArray();
-
         for (int i = 0; i < targetDeviceNames.Length; i++)
         {
             PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
         }
+
+        if (!string.IsNullOrEmpty(InputTimeText.text))
+            PlayerPrefs.SetString("InputTimeText", InputTimeText.text);
 
         BleApi.StartDeviceScan();
         isFirstTimeScanningDevices = 1;
@@ -510,11 +517,11 @@ public class Demo : MonoBehaviour
         //判断是圈数还是时间
         if(RoundToggle.isOn)
         {
-            int input_round = int.Parse(InputRoundText.text);
+            float input_round = float.Parse(InputRoundText.text);
         }
         else if(TimeToggle.isOn)
         {
-            int input_time = int.Parse(InputTimeText.text);
+            float input_time = float.Parse(InputTimeText.text);
             StartCoroutine(IEnumTimeCountdown(input_time)); // 倒计时  分钟
         }                                    
     }
@@ -543,15 +550,16 @@ public class Demo : MonoBehaviour
     }
 
 
-    IEnumerator IEnumTimeCountdown(int time)
+    IEnumerator IEnumTimeCountdown(float time)
     {
         TimeCountdown.transform.parent.gameObject.SetActive(true);
-        int totalSeconds = time * 60;
+        float totalSeconds = time * 60;
+        Debug.Log(totalSeconds+ "totalSeconds--------------------------");
 
         while (totalSeconds > 0)
         {
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
+            int minutes = (int)totalSeconds / 60;
+            int seconds = (int)totalSeconds % 60;
 
             TimeCountdown.text = string.Format("{0:D2}:{1:D2}", minutes, seconds);
 
@@ -570,36 +578,51 @@ public class Demo : MonoBehaviour
         TodayTimeText.text = formattedDate;
 
 
-        0
+        
         // 先对列表按 totalDistance 降序排序 
         List<BicycleController> sortedList = BicycleControllers
             .OrderByDescending(b => b.totalDistance)
             .ToList();
 
-        for (int i = 0; i < BicycleControllers.Count; i++)  //再根据BicycleControllers显示
+        for (int i = 0; i < sortedList.Count; i++)  //再根据sortedList显示
         {
+            sortedList[i].topSpeed = 1f;
+            sortedList[i].enabled = false;
             Transform perchild = RankTrans.GetChild(i);
             perchild.gameObject.SetActive(true);
 
             Text TimeT = perchild.Find("M_time").GetComponent<Text>(); //总时间
-            int input_time = int.Parse(InputTimeText.text);
+            float input_time = float.Parse(InputTimeText.text);
             TimeT.text = input_time.ToString("F1");
 
             Text RankName = perchild.Find("RankName").GetComponent<Text>(); //名字
-            RankName.text = BicycleControllers[i].DeviceName;
+            RankName.text = sortedList[i].DeviceName;
 
             Text DisText = perchild.Find("+dis").Find("dis").GetComponent<Text>(); //总公里
-            float itotaldis = BicycleControllers[i].totalDistance;
-            DisText.text = itotaldis.ToString();
+            float itotaldis = sortedList[i].totalDistance/1000;  //多少公里
+            DisText.text = itotaldis.ToString("F2");
 
             Text SpeedText = perchild.Find("+speed").Find("speed").GetComponent<Text>(); //总公里/时间
-            float pjspeed = itotaldis / input_time;
+            float fhour = input_time / 60;
+            float pjspeed = itotaldis / fhour;
             SpeedText.text = pjspeed.ToString("F1");
         }
     }
 
-
-
+    /// <summary>
+    /// 重新开始按钮
+    /// </summary>
+    void OnRestartClicked()
+    {
+        Debug.Log("Restart button clicked!");
+        // 在这里添加你的重启逻辑
+    }
+    void OnBackClicked()
+    {
+        Debug.Log("OnBack button clicked!");
+        // 在这里添加你的重启逻辑
+    }
+    
 
 }
 
