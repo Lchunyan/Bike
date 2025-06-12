@@ -64,7 +64,7 @@ namespace SBPScripts
         public float totalDistance = 0f;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
-        private int currentTargetIndex = 0;
+        public int currentTargetIndex = 0;
         public bool useAutoPath;
         public float steerSmoothSpeed = 5f;
         float previousSteerAxis = 0f;
@@ -478,7 +478,7 @@ namespace SBPScripts
 
                 if (distanceToTarget < IDis && currentTargetIndex < pathPoints.Count)
                 {
-                    IDis = UnityEngine.Random.Range(2f, 7f);  // 可能的值：0.0 到小于 6.0
+                    IDis = UnityEngine.Random.Range(2f, 5f);  // 可能的值：0.0 到小于 6.0
                     currentTargetIndex++;
                     if (currentTargetIndex == pathPoints.Count)
                     {
