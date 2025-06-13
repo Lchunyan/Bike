@@ -166,7 +166,7 @@ public class Demo : MonoBehaviour
             if (ScanningDevicesTime >= 15)// 第一次定时5秒确认一下个数
             {
                 Debug.Log("ScanningDevicesTime>15------");
-                isFirstTimeScanningDevices = 0;
+                isFirstTimeScanningDevices = -1;  //停止查找
                 ScanningDevicesTime = 0;
                 BleApi.StopDeviceScan();
 
@@ -179,6 +179,7 @@ public class Demo : MonoBehaviour
                     }
                     if (targetDeviceNames.Length == discoveredDevices.Count)
                     {
+                        ShowTimeTipsText.gameObject.SetActive(true);
                         ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请开始连接";  //开始创建----------------------------------------------------
 
                         StartSearch.interactable = false;
@@ -186,11 +187,13 @@ public class Demo : MonoBehaviour
                     }
                     else if (targetDeviceNames.Length > discoveredDevices.Count)
                     {
-                        ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请重新查找再连接";
+                        ShowTimeTipsText.gameObject.SetActive(true);
+                        ShowTimeTipsText.text = "只找到" + discoveredDevices.Count + "个设备，请重新查找";
                     }
                 }
                 else
                 {
+                    ShowTimeTipsText.gameObject.SetActive(true);
                     ShowTimeTipsText.text = "无设备可连接，请重新查找再连接";
                 }
             }
@@ -233,10 +236,11 @@ public class Demo : MonoBehaviour
 
                             if (targetDeviceNames.Length == discoveredDevices.Count)
                             {
-                                isFirstTimeScanningDevices = 0;
+                                isFirstTimeScanningDevices = -1;
                                 ScanningDevicesTime = 0;
                                 BleApi.StopDeviceScan();
                                 Debug.Log("查找到" + discoveredDevices.Count + "个设备，请开始连接");
+                                ShowTimeTipsText.gameObject.SetActive(true);
                                 ShowTimeTipsText.text = "查找到" + discoveredDevices.Count + "个设备，请开始连接";  //开始创建
 
                                 StartSearch.interactable = false;
@@ -418,6 +422,7 @@ public class Demo : MonoBehaviour
             PlayerPrefs.SetString("InputTimeText", InputTimeText.text);
 
         BleApi.StartDeviceScan();
+        StartCoroutine(IEnumSearchDelay()); //开始显示转圈查找
         isFirstTimeScanningDevices = 1;
     }
 
@@ -426,7 +431,8 @@ public class Demo : MonoBehaviour
     {
         if (targetDeviceNames.Length != discoveredDevices.Count)
         {
-            ShowTimeTipsText.text = "请查找到对应设备再连接";
+            ShowTimeTipsText.gameObject.SetActive(true);
+            ShowTimeTipsText.text = "请先查找到对应设备再连接";
             return;
         }
 
@@ -549,7 +555,11 @@ public class Demo : MonoBehaviour
         timetrans.localScale = targetScale; // 确保最终完全到位
     }
 
-
+    /// <summary>
+    /// 开始之后倒计时
+    /// </summary>
+    /// <param name="time"></param>
+    /// <returns></returns>
     IEnumerator IEnumTimeCountdown(float time)
     {
         TimeCountdown.transform.parent.gameObject.SetActive(true);
@@ -616,6 +626,61 @@ public class Demo : MonoBehaviour
         }
     }
 
+
+    /// <summary>
+    /// 循环“亮度流动”动画
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator IEnumSearchDelay()
+    {
+        Transform SearchDelayTrans = StartViewTrans.transform.Find("SearchDelay").Find("SearchDelayRound");
+        SearchDelayTrans.gameObject.SetActive(true);
+        List<RawImage> ListImg = new List<RawImage>();
+        for (int n = 0; n < SearchDelayTrans.childCount; n++)
+        {
+            RawImage img = SearchDelayTrans.GetChild(n).GetComponent<RawImage>();
+            ListImg.Add(img);
+        }
+
+        ShowTimeTipsText.gameObject.SetActive(true);
+        ShowTimeTipsText.text = "查找中...";
+        int count = ListImg.Count;
+        int i = 0;
+        while (true)
+        {
+            // 所有先设为 140
+            for (int j = 0; j < count; j++)
+            {
+                SetImageAlpha(ListImg[j], 120);
+            }
+
+            // 当前滑动的3个
+            int index20 = i % count;
+            int index60 = (i - 1 + count) % count;
+            int index100 = (i - 2 + count) % count;
+
+            SetImageAlpha(ListImg[index100], 80);
+            SetImageAlpha(ListImg[index60], 50);
+            SetImageAlpha(ListImg[index20], 20);
+
+            i++; // 向前推进
+            yield return new WaitForSeconds(0.1f);
+
+            if(isFirstTimeScanningDevices!=1)  //查找状态
+            {
+                SearchDelayTrans.gameObject.SetActive(false);
+                break;
+            }
+        }
+    }
+
+    void SetImageAlpha(RawImage img, float alpha)
+    {
+        Color c = img.color;
+        c.a = alpha / 255f;
+        img.color = c;
+    }
+
     /// <summary>
     /// 重新开始按钮
     /// </summary>
@@ -643,8 +708,6 @@ public class Demo : MonoBehaviour
         Debug.Log("OnBack button clicked!");
         // 在这里添加返回逻辑
     }
-
-
 }
 
 
