@@ -162,7 +162,7 @@ namespace SBPScripts
         public AirTimeSettings airTimeSettings;
 
 
-        private Vector3 lastPosition;
+        public Vector3 lastPosition;
 
         void Awake()
         {
@@ -413,6 +413,7 @@ namespace SBPScripts
 
 
             // ➕ 计算本帧移动的距离，并累加
+
             float distanceThisFrame = Vector3.Distance(transform.position, lastPosition);
             totalDistance += distanceThisFrame;
             lastPosition = transform.position;

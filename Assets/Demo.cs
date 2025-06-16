@@ -324,7 +324,7 @@ public class Demo : MonoBehaviour
                             Debug.Log("已连接..." + dID);
                             if (CloneIndex == discoveredDevices.Count)
                             {
-                                StartViewTrans.SetActive(false);
+                              
                                 ShowTimeTipsText.text = "已全部连接...";
                                 Invoke("ShowTimeTipsTextFalse", 6f);
 
@@ -581,8 +581,14 @@ public class Demo : MonoBehaviour
     IEnumerator IEnumShowOneChildAt321Time()
     {
         yield return new WaitForSeconds(0.1f);
+        StartViewTrans.SetActive(false);
+
+        RestartBtn.gameObject.SetActive(false);
+        BackBtn.gameObject.SetActive(false);
+
         ShowTimeTipsText.gameObject.SetActive(false);
         Obj321.gameObject.SetActive(true);
+
         int count = Obj321.childCount;
         for (int i = 0; i < count; i++)
         {
@@ -605,6 +611,8 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].enabled = true;
+            BicycleControllers[i].totalDistance = 0;
+            BicycleControllers[i].lastPosition = BicycleControllers[i].transform.position;
             Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
             rig.isKinematic = false;
         }
@@ -720,9 +728,8 @@ public class Demo : MonoBehaviour
             float pjspeed = itotaldis / fhour;
             SpeedText.text = pjspeed.ToString("F1");
 
-            sortedList[i].topSpeed = 0.1f;
-            sortedList[i].totalDistance = 0f;
-            sortedList[i].currentTargetIndex = 0;
+            BicycleControllers[i].topSpeed = 1f;
+            //BicycleControllers[i].totalDistance = 0f;
         }
 
         yield return new WaitForSeconds(3f);
@@ -730,6 +737,7 @@ public class Demo : MonoBehaviour
         {
             Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
             rig.isKinematic = true;
+            BicycleControllers[i].currentTargetIndex = 0;
             BicycleControllers[i].enabled = false;
         }
         RestartBtn.gameObject.SetActive(true);
@@ -808,6 +816,7 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].transform.position = BicyclePosList[i].transform.position;
+            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0); 
         }
         OverViewTrans.gameObject.SetActive(false);
         StartCoroutine(IEnumShowOneChildAt321Time());
@@ -821,6 +830,7 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].transform.position = BicyclePosList[i].transform.position;
+            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0); 
         }
 
         OverViewTrans.gameObject.SetActive(false);
