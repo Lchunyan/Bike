@@ -381,26 +381,30 @@ public class Demo : MonoBehaviour
                 }
             }
 
-            //相机跟随第二快的人
-            if (BicycleControllers.Count >= 2)
+
+            if (isFirstTimeScanningDevices == 4)
             {
-                SetCameraTime += Time.deltaTime;
-                if (SetCameraTime >= 3)
+                //相机跟随第二快的人
+                if (BicycleControllers.Count >= 2)
                 {
-                    // 先对列表按 totalDistance 降序排序
-                    List<BicycleController> sortedList = BicycleControllers
-                        .OrderByDescending(b => b.totalDistance)
-                        .ToList();
-
-                    // 再取第二个元素（下标为 1）
-                    if (sortedList.Count >= 2)
+                    SetCameraTime += Time.deltaTime;
+                    if (SetCameraTime >= 3)
                     {
-                        BicycleController secondFurthest = sortedList[1];
-                        Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
-                        MainCamera.target = secondFurthest.transform;
-                    }
+                        // 先对列表按 totalDistance 降序排序
+                        List<BicycleController> sortedList = BicycleControllers
+                            .OrderByDescending(b => b.totalDistance)
+                            .ToList();
 
-                    SetCameraTime = 0;
+                        // 再取第二个元素（下标为 1）
+                        if (sortedList.Count >= 2)
+                        {
+                            BicycleController secondFurthest = sortedList[1];
+                            Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
+                            MainCamera.target = secondFurthest.transform;
+                        }
+
+                        SetCameraTime = 0;
+                    }
                 }
             }
 
@@ -477,15 +481,16 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(InputTimeText.text))
             PlayerPrefs.SetString("InputTimeText", InputTimeText.text);
 
+        targetDeviceNames = deviceNameList.ToArray();
+        for (int i = 0; i < targetDeviceNames.Length; i++)
+        {
+            PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
+        }
         //判断是否一样
         bool keysMatch = new HashSet<string>(discoveredDevices.Values).SetEquals(deviceNameList);
         if (!keysMatch) //如果不一样
         {
-            targetDeviceNames = deviceNameList.ToArray();
-            for (int i = 0; i < targetDeviceNames.Length; i++)
-            {
-                PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
-            }
+            
 
             //销毁自行车实例
             for (int i = 0; i < BicycleControllers.Count; i++)
@@ -500,6 +505,7 @@ public class Demo : MonoBehaviour
         else //如果一样，就不需要再查找  直接321开始
         {
             IsSameWithLastTime = true;
+            ShowTimeTipsText.gameObject.SetActive(true);
             ShowTimeTipsText.text = "已有连接设备，请直接开始连接";
         }
     }
@@ -575,6 +581,7 @@ public class Demo : MonoBehaviour
     IEnumerator IEnumShowOneChildAt321Time()
     {
         yield return new WaitForSeconds(0.1f);
+        ShowTimeTipsText.gameObject.SetActive(false);
         Obj321.gameObject.SetActive(true);
         int count = Obj321.childCount;
         for (int i = 0; i < count; i++)
@@ -828,6 +835,8 @@ public class Demo : MonoBehaviour
     {
         InitDevices();
     }
+
+
 }
 
 
