@@ -115,7 +115,7 @@ namespace SBPScripts
         float oscillationSteerEffect;
         [HideInInspector]
         public float cycleOscillation;
-        
+
         public Rigidbody rb, fWheelRb, rWheelRb;
         float turnAngle;
         float xQuat, zQuat;
@@ -161,7 +161,7 @@ namespace SBPScripts
         public WayPointSystem wayPointSystem;
         public AirTimeSettings airTimeSettings;
 
-       
+
         private Vector3 lastPosition;
 
         void Awake()
@@ -229,7 +229,6 @@ namespace SBPScripts
 
         void FixedUpdate()
         {
-
             //Physics based Steering Control.
             fPhysicsWheel.transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y + customSteerAxis * steerAngle.Evaluate(rb.velocity.magnitude) + oscillationSteerEffect, 0);
             fPhysicsWheelConfigJoint.axis = new Vector3(1, 0, 0);
@@ -418,6 +417,7 @@ namespace SBPScripts
             totalDistance += distanceThisFrame;
             lastPosition = transform.position;
         }
+
         void Update()
         {
             ApplyCustomInput();
