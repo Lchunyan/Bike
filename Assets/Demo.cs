@@ -82,6 +82,27 @@ public class Demo : MonoBehaviour
     //圈数还是时间
     private Toggle RoundToggle;
     private InputField InputRoundText;
+    //public int RoundOverNum;
+    private int roundovernum;
+    public int RoundOverNum
+    {
+        get
+        {
+            return roundovernum;
+        }
+        set
+        {
+            roundovernum = value;
+            if (value == BicycleControllers.Count)
+            {
+                //结束
+                RoundOverNum = 0;
+                StartCoroutine(IEnumCommonOver());
+            }
+        }
+    }
+
+
     private Toggle TimeToggle;
     private InputField InputTimeText;
     private Text TimeCountdown;
@@ -161,14 +182,62 @@ public class Demo : MonoBehaviour
         BiycycleStandardTrans.gameObject.SetActive(false);
         discoveredDevices.Clear();
 
+        GetPlayerPrefs();
+    }
+
+    void GetPlayerPrefs()
+    {
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("0"))) DeviceText_1.text = PlayerPrefs.GetString("0");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("1"))) DeviceText_2.text = PlayerPrefs.GetString("1");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("2"))) DeviceText_3.text = PlayerPrefs.GetString("2");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("3"))) DeviceText_4.text = PlayerPrefs.GetString("3");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("4"))) DeviceText_5.text = PlayerPrefs.GetString("4");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("5"))) DeviceText_6.text = PlayerPrefs.GetString("5");
+        if (!string.IsNullOrEmpty(PlayerPrefs.GetString("InputRoundText"))) InputRoundText.text = PlayerPrefs.GetString("InputRoundText");
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("InputTimeText"))) InputTimeText.text = PlayerPrefs.GetString("InputTimeText");
+        int i_TimeToggle = PlayerPrefs.GetInt("TimeToggle");
+        if (i_TimeToggle == 1)
+            TimeToggle.isOn = true;
+        else
+            RoundToggle.isOn = false;
 
+
+        int i_RoundToggle = PlayerPrefs.GetInt("RoundToggle");
+        if (i_RoundToggle == 1)
+            RoundToggle.isOn = true;
+        else
+            TimeToggle.isOn = false;
+
+    }
+    void SetPlayerPrefs(List<string> deviceNameList)
+    {
+        PlayerPrefs.DeleteAll();
+        //List<string> deviceNameList = new List<string>();
+        if (!string.IsNullOrEmpty(DeviceText_1.text)) deviceNameList.Add(DeviceText_1.text);
+        if (!string.IsNullOrEmpty(DeviceText_2.text)) deviceNameList.Add(DeviceText_2.text);
+        if (!string.IsNullOrEmpty(DeviceText_3.text)) deviceNameList.Add(DeviceText_3.text);
+        if (!string.IsNullOrEmpty(DeviceText_4.text)) deviceNameList.Add(DeviceText_4.text);
+        if (!string.IsNullOrEmpty(DeviceText_5.text)) deviceNameList.Add(DeviceText_5.text);
+        if (!string.IsNullOrEmpty(DeviceText_6.text)) deviceNameList.Add(DeviceText_6.text);
+        if (!string.IsNullOrEmpty(InputTimeText.text))
+            PlayerPrefs.SetString("InputTimeText", InputTimeText.text);
+        if (!string.IsNullOrEmpty(InputRoundText.text))
+            PlayerPrefs.SetString("InputRoundText", InputRoundText.text);
+        if (RoundToggle.isOn)
+        {
+            PlayerPrefs.SetInt("RoundToggle", 1);
+            PlayerPrefs.SetInt("TimeToggle", 0);
+        }
+        else if (TimeToggle.isOn)
+        {
+            PlayerPrefs.SetInt("RoundToggle", 0);
+            PlayerPrefs.SetInt("TimeToggle", 1);
+        }
+        targetDeviceNames = deviceNameList.ToArray();
+        for (int i = 0; i < targetDeviceNames.Length; i++)
+        {
+            PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
+        }
     }
 
     /// <summary>
@@ -185,6 +254,8 @@ public class Demo : MonoBehaviour
         BackBtn.gameObject.SetActive(false);
         DisconnectViewTrans.gameObject.SetActive(false);
 
+        StartSearchBtn.interactable = true;
+
         //销毁自行车实例
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
@@ -199,6 +270,7 @@ public class Demo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //第一次查找设备
         if (isFirstTimeScanningDevices == 1) //第一次查找设备
         {
             ScanningDevicesTime += Time.deltaTime;
@@ -324,10 +396,9 @@ public class Demo : MonoBehaviour
                             Debug.Log("已连接..." + dID);
                             if (CloneIndex == discoveredDevices.Count)
                             {
-                              
+
                                 ShowTimeTipsText.text = "已全部连接...";
                                 Invoke("ShowTimeTipsTextFalse", 6f);
-
 
                                 StartCoroutine(IEnumShowOneChildAt321Time());
                                 isFirstTimeScanningDevices = 3;
@@ -369,7 +440,7 @@ public class Demo : MonoBehaviour
                             timedate d = CadenceValueDic[dID];
                             d.currentCadenceValue = cumulativeCrankRevs;
                             d.detatime = Time.time;
-                            if (d.detatime - d.lasttime >= 1f) // 每1秒计算一次
+                            if (d.detatime - d.lasttime >= 2f) // 每2秒计算一次
                             {
                                 d.lasttime = d.detatime;
                                 int delta = d.currentCadenceValue - d.lastCadenceValue;
@@ -410,22 +481,45 @@ public class Demo : MonoBehaviour
 
             //判断断连
             IsAllConnectTime += Time.deltaTime;
-            if (IsAllConnectTime >= 2)
+            if (IsAllConnectTime >= 5)
             {
-                for (int i = 0; i < Lingshi_DevicesIDList.Count; i++)
+                ShowTimeTipsText.text = "";
+                // 找出 discoveredDevices 中有，但 Lingshi_DevicesIDList 中没有的 key
+                var extraKeys = discoveredDevices.Keys.Except(Lingshi_DevicesIDList);
+                if (extraKeys.Any())
                 {
-                    if (!discoveredDevices.ContainsKey(Lingshi_DevicesIDList[i]))
+                    // 输出对应的 value 值
+                    foreach (var key in extraKeys)
                     {
-                        ShowTimeTipsText.text = "有设备断开连接，请重新查找并连接";  //有设备断开连接，请重新查找并连接
+                        string value = discoveredDevices[key];
+                        Debug.Log($"掉线设备: ID = {key}, 名称 = {value}");
 
+                        ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
                         DisconnectViewTrans.gameObject.SetActive(true);
-                        break;
                     }
+                }
+                else
+                {
+                    Debug.Log("没有掉线的设备");
                 }
 
                 Lingshi_DevicesIDList.Clear();
                 IsAllConnectTime = 0;
             }
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            InitDevices();
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false; // 在编辑器中停止播放
+#else
+    Application.Quit(); // 在打包后的游戏中退出
+#endif
         }
     }
 
@@ -468,30 +562,17 @@ public class Demo : MonoBehaviour
     {
         if (isFirstTimeScanningDevices == 1)
             return;
-        ScanningDevicesTime = 0;
-
         List<string> deviceNameList = new List<string>();
-        PlayerPrefs.DeleteAll();
-        if (!string.IsNullOrEmpty(DeviceText_1.text)) deviceNameList.Add(DeviceText_1.text);
-        if (!string.IsNullOrEmpty(DeviceText_2.text)) deviceNameList.Add(DeviceText_2.text);
-        if (!string.IsNullOrEmpty(DeviceText_3.text)) deviceNameList.Add(DeviceText_3.text);
-        if (!string.IsNullOrEmpty(DeviceText_4.text)) deviceNameList.Add(DeviceText_4.text);
-        if (!string.IsNullOrEmpty(DeviceText_5.text)) deviceNameList.Add(DeviceText_5.text);
-        if (!string.IsNullOrEmpty(DeviceText_6.text)) deviceNameList.Add(DeviceText_6.text);
-        if (!string.IsNullOrEmpty(InputTimeText.text))
-            PlayerPrefs.SetString("InputTimeText", InputTimeText.text);
+        SetPlayerPrefs(deviceNameList);
 
-        targetDeviceNames = deviceNameList.ToArray();
-        for (int i = 0; i < targetDeviceNames.Length; i++)
+        ScanningDevicesTime = 0;
+        //判断是否一样 BicycleControllers
+        var controllerNames = BicycleControllers.Select(b => b.DeviceName);
+        bool isContentMatch = new HashSet<string>(controllerNames).SetEquals(deviceNameList);
+        if (!isContentMatch) //如果不一样
         {
-            PlayerPrefs.SetString(i.ToString(), targetDeviceNames[i]);
-        }
-        //判断是否一样
-        bool keysMatch = new HashSet<string>(discoveredDevices.Values).SetEquals(deviceNameList);
-        if (!keysMatch) //如果不一样
-        {
-            
-
+            IsSameWithLastTime = false;
+            discoveredDevices.Clear();
             //销毁自行车实例
             for (int i = 0; i < BicycleControllers.Count; i++)
             {
@@ -500,7 +581,7 @@ public class Demo : MonoBehaviour
             BicycleControllers.Clear();
             CloneIndex = 0;
             OnApplicationQuit();
-            StartCoroutine(IEnumSearchDelay()); ;
+            StartCoroutine(IEnumSearchDelay());
         }
         else //如果一样，就不需要再查找  直接321开始
         {
@@ -515,11 +596,11 @@ public class Demo : MonoBehaviour
     {
         if (IsSameWithLastTime)
         {
+            IsSameWithLastTime = false;
             StartCoroutine(IEnumShowOneChildAt321Time());
         }
         else
         {
-            IsSameWithLastTime = false;
             if (targetDeviceNames.Length != discoveredDevices.Count)
             {
                 ShowTimeTipsText.gameObject.SetActive(true);
@@ -539,24 +620,24 @@ public class Demo : MonoBehaviour
     {
         float speed = 1;
 
-        if (delta <= 1)
-            speed = 2f;
+        if (delta <= 0)
+            speed = 0.1f;
+        else if (delta <= 1)
+            speed = 5;
+        else if (delta <= 2)
+            speed = 10;
+        else if (delta <= 3)
+            speed = 15;
         else if (delta <= 4)
-            speed = 10;
+            speed = 20;
+        else if (delta <= 5)
+            speed = 25;
         else if (delta <= 6)
-            speed = 6;
-        else if (delta <= 8)
-            speed = 8;
-        else if (delta <= 10)
-            speed = 10;
-        else if (delta <= 12)
-            speed = 10;
-        else if (delta <= 14)
-            speed = 10;
-        else if (delta <= 16)
-            speed = 10;
+            speed = 30;
+        else if (delta <= 7)
+            speed = 30;
         else
-            speed = 10;
+            speed = 30;
 
         Debug.Log(SID + "--的speed---------" + speed);
         for (int i = 0; i < BicycleControllers.Count; i++)
@@ -620,10 +701,15 @@ public class Demo : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         isFirstTimeScanningDevices = 4;
 
-        //判断是圈数还是时间
+        //判断是圈数还是时间  -----------------------------------------------判断是圈数还是时间 ----------------------
         if (RoundToggle.isOn)
         {
-            float input_round = float.Parse(InputRoundText.text);
+            int input_round = int.Parse(InputRoundText.text);
+            for (int i = 0; i < BicycleControllers.Count; i++)
+            {
+                BicycleControllers[i].TargetRoundIndex = input_round;
+                BicycleControllers[i].StartTimer();
+            }
         }
         else if (TimeToggle.isOn)
         {
@@ -656,7 +742,7 @@ public class Demo : MonoBehaviour
     }
 
     /// <summary>
-    /// 开始之后倒计时
+    /// 321之后执行倒计时的开始逻辑
     /// </summary>
     /// <param name="time"></param>
     /// <returns></returns>
@@ -680,6 +766,12 @@ public class Demo : MonoBehaviour
         // 最后显示 00:00----------------------------------------------------------------------最后显示 00:00
         TimeCountdown.text = "00:00";
 
+        StartCoroutine(IEnumCommonOver());
+    }
+
+
+    IEnumerator IEnumCommonOver()
+    {
         //结束
         // isSubscribed = false;            //结束了不能置为false-----------------------------------------------------------
         isFirstTimeScanningDevices = -1;
@@ -703,46 +795,95 @@ public class Demo : MonoBehaviour
         {
             RankTrans.GetChild(i).gameObject.SetActive(false);
         }
-        // 先对列表按 totalDistance 降序排序 
-        List<BicycleController> sortedList = BicycleControllers
-        .OrderByDescending(b => b.totalDistance)
-        .ToList();
-        for (int i = 0; i < sortedList.Count; i++)  //再根据sortedList显示
+
+
+        if (TimeToggle.isOn)
         {
-            Transform perchild = RankTrans.GetChild(i);
-            perchild.gameObject.SetActive(true);
+            // 先对列表按 totalDistance 降序排序 
+            List<BicycleController> sortedList = BicycleControllers
+            .OrderByDescending(b => b.totalDistance)
+            .ToList();
+            for (int i = 0; i < sortedList.Count; i++)  //再根据sortedList显示
+            {
+                Transform perchild = RankTrans.GetChild(i);
+                perchild.gameObject.SetActive(true);
 
-            Text TimeT = perchild.Find("M_time").GetComponent<Text>(); //总时间
-            float input_time = float.Parse(InputTimeText.text);
-            TimeT.text = input_time.ToString("F1");
+                Text TimeT = perchild.Find("M_time").GetComponent<Text>(); //总时间
+                float input_time = float.Parse(InputTimeText.text);
+                TimeT.text = input_time.ToString("F1");
 
-            Text RankName = perchild.Find("RankName").GetComponent<Text>(); //名字
-            RankName.text = sortedList[i].DeviceName;
+                Text RankName = perchild.Find("RankName").GetComponent<Text>(); //名字
+                RankName.text = sortedList[i].DeviceName;
 
-            Text DisText = perchild.Find("+dis").Find("dis").GetComponent<Text>(); //总公里
-            float itotaldis = sortedList[i].totalDistance / 1000;  //多少公里
-            DisText.text = itotaldis.ToString("F2");
+                Text DisText = perchild.Find("+dis").Find("dis").GetComponent<Text>(); //总公里
+                float itotaldis = sortedList[i].totalDistance / 1000;  //多少公里
+                DisText.text = itotaldis.ToString("F2");
 
-            Text SpeedText = perchild.Find("+speed").Find("speed").GetComponent<Text>(); //总公里/时间
-            float fhour = input_time / 60;
-            float pjspeed = itotaldis / fhour;
-            SpeedText.text = pjspeed.ToString("F1");
+                Text SpeedText = perchild.Find("+speed").Find("speed").GetComponent<Text>(); //总公里/时间
+                float fhour = input_time / 60;
+                float pjspeed = itotaldis / fhour;
+                SpeedText.text = pjspeed.ToString("F1");
 
-            BicycleControllers[i].topSpeed = 1f;
-            //BicycleControllers[i].totalDistance = 0f;
+                BicycleControllers[i].topSpeed = 1f;
+                //BicycleControllers[i].totalDistance = 0f;
+            }
+
+            yield return new WaitForSeconds(3f);
+            for (int i = 0; i < BicycleControllers.Count; i++)
+            {
+                Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
+                rig.isKinematic = true;
+                BicycleControllers[i].currentTargetIndex = 0;
+                BicycleControllers[i].enabled = false;
+            }
+            RestartBtn.gameObject.SetActive(true);
+            BackBtn.gameObject.SetActive(true);
+        }
+        else if (RoundToggle.isOn)
+        {
+            // 先对列表按 time 升序排序 
+            List<BicycleController> sortedList = BicycleControllers
+            .OrderBy(b => b.AllTime)
+            .ToList();
+            for (int i = 0; i < sortedList.Count; i++)  //再根据sortedList显示
+            {
+                Transform perchild = RankTrans.GetChild(i);
+                perchild.gameObject.SetActive(true);
+
+                Text TimeT = perchild.Find("M_time").GetComponent<Text>(); //总时间
+                float input_time = sortedList[i].AllTime / 60;  //分钟
+                TimeT.text = input_time.ToString("F1");
+
+                Text RankName = perchild.Find("RankName").GetComponent<Text>(); //名字
+                RankName.text = sortedList[i].DeviceName;
+
+                Text DisText = perchild.Find("+dis").Find("dis").GetComponent<Text>(); //总公里
+                float itotaldis = sortedList[i].totalDistance / 1000;  //多少公里
+                DisText.text = itotaldis.ToString("F2");
+
+                Text SpeedText = perchild.Find("+speed").Find("speed").GetComponent<Text>(); //总公里/时间 =速度
+                float fhour = input_time / 60;
+                float pjspeed = itotaldis / fhour;
+                SpeedText.text = pjspeed.ToString("F1");
+
+                BicycleControllers[i].topSpeed = 1f;
+            }
+
+            yield return new WaitForSeconds(3f);
+            for (int i = 0; i < BicycleControllers.Count; i++)
+            {
+                Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
+                rig.isKinematic = true;
+                BicycleControllers[i].currentTargetIndex = 0;
+                BicycleControllers[i].AllTime = 0;
+                BicycleControllers[i].enabled = false;
+            }
+            RestartBtn.gameObject.SetActive(true);
+            BackBtn.gameObject.SetActive(true);
         }
 
-        yield return new WaitForSeconds(3f);
-        for (int i = 0; i < BicycleControllers.Count; i++)
-        {
-            Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
-            rig.isKinematic = true;
-            BicycleControllers[i].currentTargetIndex = 0;
-            BicycleControllers[i].enabled = false;
-        }
-        RestartBtn.gameObject.SetActive(true);
-        BackBtn.gameObject.SetActive(true);
     }
+
 
 
     /// <summary>
@@ -816,7 +957,7 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].transform.position = BicyclePosList[i].transform.position;
-            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0); 
+            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0);
         }
         OverViewTrans.gameObject.SetActive(false);
         StartCoroutine(IEnumShowOneChildAt321Time());
@@ -830,7 +971,7 @@ public class Demo : MonoBehaviour
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             BicycleControllers[i].transform.position = BicyclePosList[i].transform.position;
-            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0); 
+            BicycleControllers[i].transform.rotation = Quaternion.Euler(0, -90, 0);
         }
 
         OverViewTrans.gameObject.SetActive(false);

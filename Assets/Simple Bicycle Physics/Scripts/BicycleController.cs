@@ -64,12 +64,20 @@ namespace SBPScripts
         public float totalDistance = 0f;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
-        public int currentTargetIndex = 0;
+        public int currentTargetIndex = 0; //下一个要去的点
+
         public bool useAutoPath;
         public float steerSmoothSpeed = 5f;
         float previousSteerAxis = 0f;
         private float IDis = 4;
 
+        //计时
+        public float AllTime;
+        public int CurrentRoundIndex = 0;
+        public int TargetRoundIndex = 0;
+        private bool isRunning = false;
+
+        private Demo demo;
 
 
         public CycleGeometry cycleGeometry;
@@ -163,19 +171,23 @@ namespace SBPScripts
 
 
         public Vector3 lastPosition;
+        private GameObject CubeobjPar;
 
         void Awake()
         {
             transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
-
             pathPoints = new List<Transform>();
             Transform PointPar = GameObject.FindWithTag("Point").transform;
+
+
+            CubeobjPar = new GameObject("MyObject");
+            Transform PerPar = CubeobjPar.transform;
             int dex = PointPar.childCount;
-            GameObject insobj = PointPar.GetChild(0).gameObject;
             for (int i = 0; i < dex; i++)
             {
+                GameObject insobj = PointPar.GetChild(i).gameObject;
                 GameObject o = Instantiate(insobj);
-                o.transform.SetParent(PointPar);
+                o.transform.SetParent(PerPar);
                 Transform PointPer = PointPar.GetChild(i);
                 o.transform.localPosition = PointPer.localPosition;
                 string[] XZ = PointPer.name.Split('_');
@@ -197,6 +209,10 @@ namespace SBPScripts
 
         void Start()
         {
+            GameObject demoobj = GameObject.Find("Canvas").gameObject;
+            demo = demoobj.GetComponent<Demo>();
+
+
             lastPosition = transform.position;
 
             rb = GetComponent<Rigidbody>();
@@ -419,6 +435,26 @@ namespace SBPScripts
             lastPosition = transform.position;
         }
 
+
+        public void StartTimer()
+        {
+            isRunning = true;
+            StartCoroutine(TimerCoroutine());
+        }
+        /// <summary>
+        /// 计时器
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator TimerCoroutine()
+        {
+            while (isRunning)
+            {
+                AllTime += 1f;
+                yield return new WaitForSeconds(1f);
+            }
+        }
+
+
         void Update()
         {
             ApplyCustomInput();
@@ -485,6 +521,13 @@ namespace SBPScripts
                     {
                         currentTargetIndex = 0;
                         Debug.Log(currentTargetIndex + "--------");
+                        CurrentRoundIndex++;
+                        if(TargetRoundIndex!=0 && CurrentRoundIndex == TargetRoundIndex)
+                        {
+                            isRunning = false;
+                            CurrentRoundIndex = 0;
+                            demo.RoundOverNum++;
+                        }
                     }
                 }
             }
@@ -593,6 +636,10 @@ namespace SBPScripts
             yield return new WaitForSeconds(0.5f);
             isBunnyHopping = false;
             yield return null;
+        }
+        private void OnDestroy()
+        {
+            Destroy(CubeobjPar);
         }
 
     }
