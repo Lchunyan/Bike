@@ -94,6 +94,11 @@ public class Demo : MonoBehaviour
         set
         {
             roundovernum = value;
+            for(int i=0;i< BicycleControllers.Count;i++)
+            {
+                BicycleControllers[i].totalDistance = BicycleControllers[0].totalDistance;
+            }
+
             if (value == BicycleControllers.Count)
             {
                 //结束
@@ -675,7 +680,6 @@ public class Demo : MonoBehaviour
             if (BicycleControllers[i].DeviceID == SID)
             {
                 BicycleControllers[i].topSpeed = speed;
-                BicycleControllers[i].currentTopSpeed = 0;
                 break;
             }
         }
@@ -859,7 +863,7 @@ public class Demo : MonoBehaviour
                 //BicycleControllers[i].totalDistance = 0f;
             }
 
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(2f);
             for (int i = 0; i < BicycleControllers.Count; i++)
             {
                 Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
@@ -900,7 +904,7 @@ public class Demo : MonoBehaviour
                 BicycleControllers[i].topSpeed = 1f;
             }
 
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(2f);
             for (int i = 0; i < BicycleControllers.Count; i++)
             {
                 Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
