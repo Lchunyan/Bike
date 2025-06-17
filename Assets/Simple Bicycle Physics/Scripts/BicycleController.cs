@@ -64,7 +64,7 @@ namespace SBPScripts
         public float totalDistance = 0f;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
-        public int currentTargetIndex = 0; //下一个要去的点
+        public int NextGotoPointIndex = 0; //下一个要去的点
 
         public bool useAutoPath;
         public float steerSmoothSpeed = 5f;
@@ -75,7 +75,7 @@ namespace SBPScripts
         public float AllTime;
         public int CurrentRoundIndex = 0;
         public int TargetRoundIndex = 0;
-        private bool isRunning = false;
+        private bool isRoundRunning = false;
 
         private Demo demo;
 
@@ -191,7 +191,7 @@ namespace SBPScripts
                 Transform PointPer = PointPar.GetChild(i);
                 o.transform.localPosition = PointPer.localPosition;
                 string[] XZ = PointPer.name.Split('_');
-                float randFloat = UnityEngine.Random.Range(-6f, 6f);
+                float randFloat = UnityEngine.Random.Range(-5f, 5f);
                 if (XZ.Length == 2)
                 {
                     if (XZ[1] == "X")
@@ -445,6 +445,19 @@ namespace SBPScripts
                 rb.drag = Mathf.Lerp(rb.drag, 0.5f, Time.fixedDeltaTime * 2f);
             }
 
+            if (currentTopSpeed < 0.1f)
+            {
+                // 停止移动
+                rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, Time.fixedDeltaTime * 5f);
+
+                // 停止旋转
+                rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, Vector3.zero, Time.fixedDeltaTime * 5f);
+
+                // 选做：强制姿态归正
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), Time.fixedDeltaTime * 5f);
+            }
+
+
 
 
 
@@ -457,7 +470,7 @@ namespace SBPScripts
 
         public void StartTimer()
         {
-            isRunning = true;
+            isRoundRunning = true;
             StartCoroutine(TimerCoroutine());
         }
         /// <summary>
@@ -466,7 +479,7 @@ namespace SBPScripts
         /// <returns></returns>
         IEnumerator TimerCoroutine()
         {
-            while (isRunning)
+            while (isRoundRunning)
             {
                 AllTime += 1f;
                 yield return new WaitForSeconds(1f);
@@ -510,7 +523,7 @@ namespace SBPScripts
         {
             if (useAutoPath)
             {
-                Vector3 targetPoint = pathPoints[currentTargetIndex].position;
+                Vector3 targetPoint = pathPoints[NextGotoPointIndex].position;
                 Vector3 dirToTarget = (targetPoint - transform.position).normalized;
                 Vector3 localDir = transform.InverseTransformDirection(dirToTarget);
 
@@ -532,20 +545,23 @@ namespace SBPScripts
 
                 previousSteerAxis = smoothSteer;
 
-                if (distanceToTarget < IDis && currentTargetIndex < pathPoints.Count)
+                if (distanceToTarget < IDis && NextGotoPointIndex < pathPoints.Count)
                 {
-                    IDis = UnityEngine.Random.Range(2f, 5f);  // 可能的值：0.0 到小于 6.0
-                    currentTargetIndex++;
-                    if (currentTargetIndex == pathPoints.Count)
+                    IDis = UnityEngine.Random.Range(3f, 7f);  // 可能的值：0.0 到小于 7.0
+                    NextGotoPointIndex++;
+                    if (NextGotoPointIndex == pathPoints.Count)
                     {
-                        currentTargetIndex = 0;
-                        Debug.Log(currentTargetIndex + "--------");
-                        CurrentRoundIndex++;
-                        if(TargetRoundIndex!=0 && CurrentRoundIndex == TargetRoundIndex)
+                        NextGotoPointIndex = 0;
+                        Debug.Log(NextGotoPointIndex + "--------");
+                        if(isRoundRunning)
                         {
-                            isRunning = false;
-                            CurrentRoundIndex = 0;
-                            demo.RoundOverNum++;
+                            CurrentRoundIndex++;
+                            if (TargetRoundIndex != 0 && CurrentRoundIndex == TargetRoundIndex)
+                            {
+                                isRoundRunning = false;
+                                CurrentRoundIndex = 0;
+                                demo.RoundOverNum++;
+                            }
                         }
                     }
                 }

@@ -183,7 +183,7 @@ public class Demo : MonoBehaviour
         BiycycleStandardTrans.gameObject.SetActive(false);
         discoveredDevices.Clear();
 
-        GetPlayerPrefs();
+         GetPlayerPrefs();
     }
 
     void GetPlayerPrefs()
@@ -198,17 +198,30 @@ public class Demo : MonoBehaviour
         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("InputTimeText"))) InputTimeText.text = PlayerPrefs.GetString("InputTimeText");
         int i_TimeToggle = PlayerPrefs.GetInt("TimeToggle");
         if (i_TimeToggle == 1)
+        {
             TimeToggle.isOn = true;
-        else
             RoundToggle.isOn = false;
-
+        }
+        else
+        {
+            TimeToggle.isOn = false;
+            RoundToggle.isOn = true;
+        }
+           
+        Debug.Log(i_TimeToggle + "TimeToggle.isOn----");
 
         int i_RoundToggle = PlayerPrefs.GetInt("RoundToggle");
         if (i_RoundToggle == 1)
+        {
             RoundToggle.isOn = true;
-        else
             TimeToggle.isOn = false;
-
+        }
+        else
+        {
+            RoundToggle.isOn = false;
+            TimeToggle.isOn = true;
+        }
+           
     }
     void SetPlayerPrefs(List<string> deviceNameList)
     {
@@ -233,6 +246,12 @@ public class Demo : MonoBehaviour
         {
             PlayerPrefs.SetInt("RoundToggle", 0);
             PlayerPrefs.SetInt("TimeToggle", 1);
+
+            int i_TimeToggle = PlayerPrefs.GetInt("TimeToggle");
+            Debug.Log(i_TimeToggle+"TimeToggle.isOn----");
+
+
+
         }
         targetDeviceNames = deviceNameList.ToArray();
         for (int i = 0; i < targetDeviceNames.Length; i++)
@@ -656,6 +675,7 @@ public class Demo : MonoBehaviour
             if (BicycleControllers[i].DeviceID == SID)
             {
                 BicycleControllers[i].topSpeed = speed;
+                BicycleControllers[i].currentTopSpeed = 0;
                 break;
             }
         }
@@ -844,7 +864,7 @@ public class Demo : MonoBehaviour
             {
                 Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
                 rig.isKinematic = true;
-                BicycleControllers[i].currentTargetIndex = 0;
+                BicycleControllers[i].NextGotoPointIndex = 0;
                 BicycleControllers[i].enabled = false;
             }
             RestartBtn.gameObject.SetActive(true);
@@ -885,7 +905,7 @@ public class Demo : MonoBehaviour
             {
                 Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
                 rig.isKinematic = true;
-                BicycleControllers[i].currentTargetIndex = 0;
+                BicycleControllers[i].NextGotoPointIndex = 0;
                 BicycleControllers[i].AllTime = 0;
                 BicycleControllers[i].enabled = false;
             }
