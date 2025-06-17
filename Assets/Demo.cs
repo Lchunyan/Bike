@@ -16,6 +16,7 @@ using UnityEngine.XR;
 
 public class Demo : MonoBehaviour
 {
+    private bool HasGetMessage; //点击连接，全部有数据反馈
     private int isFirstTimeScanningDevices = 0;
     public Button StartSearchBtn; //开始查找按钮
     public Button StartConnectBtn; //开始连接按钮
@@ -346,7 +347,7 @@ public class Demo : MonoBehaviour
 
                             if (targetDeviceNames.Length == discoveredDevices.Count)
                             {
-                                isFirstTimeScanningDevices = -1;
+                                isFirstTimeScanningDevices = 2; //找到设备，还没链接，准备连接
                                 ScanningDevicesTime = 0;
                                 BleApi.StopDeviceScan();
                                 Debug.Log("查找到" + discoveredDevices.Count + "个设备，请开始连接");
@@ -385,8 +386,8 @@ public class Demo : MonoBehaviour
                     Lingshi_DevicesIDList.Add(dID);
 
 
-                //第一次点击连接之后开始有数据  
-                if (isFirstTimeScanningDevices == 2)
+                //第一次点击连接之后开始有数据反馈  
+                if (isFirstTimeScanningDevices == 3)
                 {
                     if (discoveredDevices.Count > 0)
                     {
@@ -396,12 +397,12 @@ public class Demo : MonoBehaviour
                             Debug.Log("已连接..." + dID);
                             if (CloneIndex == discoveredDevices.Count)
                             {
-
+                                HasGetMessage = true;
                                 ShowTimeTipsText.text = "已全部连接...";
                                 Invoke("ShowTimeTipsTextFalse", 6f);
 
                                 StartCoroutine(IEnumShowOneChildAt321Time());
-                                isFirstTimeScanningDevices = 3;
+                                isFirstTimeScanningDevices = 4;   //全部连接
                             }
                         }
                     }
@@ -479,32 +480,35 @@ public class Demo : MonoBehaviour
                 }
             }
 
-            //判断断连
-            IsAllConnectTime += Time.deltaTime;
-            if (IsAllConnectTime >= 5)
+            if (HasGetMessage)
             {
-                ShowTimeTipsText.text = "";
-                // 找出 discoveredDevices 中有，但 Lingshi_DevicesIDList 中没有的 key
-                var extraKeys = discoveredDevices.Keys.Except(Lingshi_DevicesIDList);
-                if (extraKeys.Any())
+                //判断断连
+                IsAllConnectTime += Time.deltaTime;
+                if (IsAllConnectTime >= 5)
                 {
-                    // 输出对应的 value 值
-                    foreach (var key in extraKeys)
+                    ShowTimeTipsText.text = "";
+                    // 找出 discoveredDevices 中有，但 Lingshi_DevicesIDList 中没有的 key
+                    var extraKeys = discoveredDevices.Keys.Except(Lingshi_DevicesIDList);
+                    if (extraKeys.Any())
                     {
-                        string value = discoveredDevices[key];
-                        Debug.Log($"掉线设备: ID = {key}, 名称 = {value}");
+                        // 输出对应的 value 值
+                        foreach (var key in extraKeys)
+                        {
+                            string value = discoveredDevices[key];
+                            Debug.Log($"掉线设备: ID = {key}, 名称 = {value}");
 
-                        ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
-                        DisconnectViewTrans.gameObject.SetActive(true);
+                            ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
+                            DisconnectViewTrans.gameObject.SetActive(true);
+                        }
                     }
-                }
-                else
-                {
-                    Debug.Log("没有掉线的设备");
-                }
+                    else
+                    {
+                        Debug.Log("没有掉线的设备");
+                    }
 
-                Lingshi_DevicesIDList.Clear();
-                IsAllConnectTime = 0;
+                    Lingshi_DevicesIDList.Clear();
+                    IsAllConnectTime = 0;
+                }
             }
         }
 
@@ -573,6 +577,7 @@ public class Demo : MonoBehaviour
         {
             IsSameWithLastTime = false;
             discoveredDevices.Clear();
+            devices.Clear();
             //销毁自行车实例
             for (int i = 0; i < BicycleControllers.Count; i++)
             {
@@ -594,26 +599,32 @@ public class Demo : MonoBehaviour
 
     public void Subscribe2() /////////////////////////////////////////////////////////////////////
     {
-        if (IsSameWithLastTime)
+        if (isFirstTimeScanningDevices == 2) ////找到设备，还没链接，准备连接
         {
-            IsSameWithLastTime = false;
-            StartCoroutine(IEnumShowOneChildAt321Time());
-        }
-        else
-        {
-            if (targetDeviceNames.Length != discoveredDevices.Count)
-            {
-                ShowTimeTipsText.gameObject.SetActive(true);
-                ShowTimeTipsText.text = "请先查找到对应设备再连接";
-                return;
-            }
-
             foreach (string DeviceID in discoveredDevices.Keys)
             {
                 BleApi.SubscribeCharacteristic(DeviceID, "{00001816-0000-1000-8000-00805f9b34fb}", "{00002a5b-0000-1000-8000-00805f9b34fb}", false);
             }
             isSubscribed = true;
-            isFirstTimeScanningDevices = 2;//第一次点击连接
+            isFirstTimeScanningDevices = 3;//连接ing...
+        }
+        else
+        {
+            List<string> deviceNameList = new List<string>();
+            SetPlayerPrefs(deviceNameList);
+            //判断是否一样 BicycleControllers
+            var controllerNames = BicycleControllers.Select(b => b.DeviceName);
+            bool isContentMatch = new HashSet<string>(controllerNames).SetEquals(deviceNameList);
+            if (!isContentMatch) //如果不一样
+            {
+                ShowTimeTipsText.gameObject.SetActive(true);
+                ShowTimeTipsText.text = "请先查找到对应设备再连接";
+                return;
+            }
+            else
+            {
+                StartCoroutine(IEnumShowOneChildAt321Time());
+            }
         }
     }
     void UpdateSpeed(string SID, int delta)
@@ -623,17 +634,17 @@ public class Demo : MonoBehaviour
         if (delta <= 0)
             speed = 0.1f;
         else if (delta <= 1)
-            speed = 5;
+            speed = 4;
         else if (delta <= 2)
-            speed = 10;
+            speed = 8;
         else if (delta <= 3)
-            speed = 15;
+            speed = 12;
         else if (delta <= 4)
-            speed = 20;
+            speed = 16;
         else if (delta <= 5)
-            speed = 25;
+            speed = 20;
         else if (delta <= 6)
-            speed = 30;
+            speed = 25;
         else if (delta <= 7)
             speed = 30;
         else
@@ -894,6 +905,7 @@ public class Demo : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         BleApi.StartDeviceScan();
+        HasGetMessage = false;
         isFirstTimeScanningDevices = 1;
 
         SearchDelayTrans.gameObject.SetActive(true);

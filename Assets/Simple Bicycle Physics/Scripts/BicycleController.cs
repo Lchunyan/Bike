@@ -427,9 +427,28 @@ namespace SBPScripts
             }
 
 
+            // 主动减速逻辑
+            if (rb.velocity.magnitude > currentTopSpeed)
+            {
+                // 计算反向减速力方向
+                Vector3 brakeDir = -rb.velocity.normalized;
+
+                // 施加一定比例的反向力
+                rb.AddForce(brakeDir * 5, ForceMode.Acceleration);
+
+                //// 可选：加空气阻力提高减速速度
+                //rb.drag = Mathf.Lerp(rb.drag, 5f, Time.fixedDeltaTime * 2f);
+            }
+            else
+            {
+                // 恢复正常空气阻力
+                rb.drag = Mathf.Lerp(rb.drag, 0.5f, Time.fixedDeltaTime * 2f);
+            }
+
+
+
 
             // ➕ 计算本帧移动的距离，并累加
-
             float distanceThisFrame = Vector3.Distance(transform.position, lastPosition);
             totalDistance += distanceThisFrame;
             lastPosition = transform.position;
