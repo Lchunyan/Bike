@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using UnityEngine.SocialPlatforms;
 
 // Please use using SBPScripts; directive to refer to or append the SBP library
@@ -78,6 +79,8 @@ namespace SBPScripts
         private bool isRoundRunning = false;
 
         private Demo demo;
+        private float Panduan_DistanceTime;
+        private float LasttotalDistance = 0f;
 
 
         public CycleGeometry cycleGeometry;
@@ -427,35 +430,23 @@ namespace SBPScripts
             }
 
 
-            // 主动减速逻辑
-            if (rb.velocity.magnitude > currentTopSpeed)
-            {
-                // 计算反向减速力方向
-                Vector3 brakeDir = -rb.velocity.normalized;
+            //// 主动减速逻辑
+            //if (rb.velocity.magnitude > currentTopSpeed)
+            //{
+            //    // 计算反向减速力方向
+            //    Vector3 brakeDir = -rb.velocity.normalized;
 
-                // 施加一定比例的反向力
-                rb.AddForce(brakeDir * 5, ForceMode.Acceleration);
+            //    // 施加一定比例的反向力
+            //    rb.AddForce(brakeDir * 5, ForceMode.Acceleration);
 
-                //// 可选：加空气阻力提高减速速度
-                //rb.drag = Mathf.Lerp(rb.drag, 5f, Time.fixedDeltaTime * 2f);
-            }
-            else
-            {
-                // 恢复正常空气阻力
-                rb.drag = Mathf.Lerp(rb.drag, 0.5f, Time.fixedDeltaTime * 2f);
-            }
-
-            if (currentTopSpeed < 0.1f)
-            {
-                // 停止移动
-                rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, Time.fixedDeltaTime * 5f);
-
-                // 停止旋转
-                rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, Vector3.zero, Time.fixedDeltaTime * 5f);
-
-                // 选做：强制姿态归正
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), Time.fixedDeltaTime * 5f);
-            }
+            //    //// 可选：加空气阻力提高减速速度
+            //    //rb.drag = Mathf.Lerp(rb.drag, 5f, Time.fixedDeltaTime * 2f);
+            //}
+            //else
+            //{
+            //    // 恢复正常空气阻力
+            //    rb.drag = Mathf.Lerp(rb.drag, 0.5f, Time.fixedDeltaTime * 2f);
+            //}
 
 
 
@@ -465,6 +456,8 @@ namespace SBPScripts
             float distanceThisFrame = Vector3.Distance(transform.position, lastPosition);
             totalDistance += distanceThisFrame;
             lastPosition = transform.position;
+
+         
         }
 
 
@@ -507,6 +500,21 @@ namespace SBPScripts
                 bunnyHopAmount = Mathf.Lerp(bunnyHopAmount, 0, Time.deltaTime * 8f);
 
             bunnyHopAmount = Mathf.Clamp01(bunnyHopAmount);
+
+
+
+
+            Panduan_DistanceTime += Time.deltaTime;
+            if (Panduan_DistanceTime >= 2)
+            {
+                if (totalDistance - LasttotalDistance < 5)
+                {
+                    rb.isKinematic = true;
+                    transform.GetComponent<BicycleController>().enabled = false;
+                }
+                LasttotalDistance = totalDistance;
+                Panduan_DistanceTime = 0;
+            }
 
         }
         float GroundConformity(bool toggle)

@@ -94,7 +94,7 @@ public class Demo : MonoBehaviour
         set
         {
             roundovernum = value;
-            for(int i=0;i< BicycleControllers.Count;i++)
+            for (int i = 0; i < BicycleControllers.Count; i++)
             {
                 BicycleControllers[i].totalDistance = BicycleControllers[0].totalDistance;
             }
@@ -188,7 +188,7 @@ public class Demo : MonoBehaviour
         BiycycleStandardTrans.gameObject.SetActive(false);
         discoveredDevices.Clear();
 
-         GetPlayerPrefs();
+        GetPlayerPrefs();
     }
 
     void GetPlayerPrefs()
@@ -212,7 +212,7 @@ public class Demo : MonoBehaviour
             TimeToggle.isOn = false;
             RoundToggle.isOn = true;
         }
-           
+
         Debug.Log(i_TimeToggle + "TimeToggle.isOn----");
 
         int i_RoundToggle = PlayerPrefs.GetInt("RoundToggle");
@@ -226,7 +226,7 @@ public class Demo : MonoBehaviour
             RoundToggle.isOn = false;
             TimeToggle.isOn = true;
         }
-           
+
     }
     void SetPlayerPrefs(List<string> deviceNameList)
     {
@@ -253,7 +253,7 @@ public class Demo : MonoBehaviour
             PlayerPrefs.SetInt("TimeToggle", 1);
 
             int i_TimeToggle = PlayerPrefs.GetInt("TimeToggle");
-            Debug.Log(i_TimeToggle+"TimeToggle.isOn----");
+            Debug.Log(i_TimeToggle + "TimeToggle.isOn----");
 
 
 
@@ -286,6 +286,7 @@ public class Demo : MonoBehaviour
         {
             Destroy(BicycleControllers[i].gameObject);
         }
+        StopAllCoroutines();
         discoveredDevices.Clear();
         BicycleControllers.Clear();
         CloneIndex = 0;
@@ -432,8 +433,8 @@ public class Demo : MonoBehaviour
                     }
                 }
 
-                //"已全部连接..."
-                if (isFirstTimeScanningDevices == 4)
+                //"321倒计时结束"
+                if (isFirstTimeScanningDevices == 5)
                 {
                     byte flags = packageReceived[0];
                     int index = 1;
@@ -468,9 +469,9 @@ public class Demo : MonoBehaviour
                             if (d.detatime - d.lasttime >= 2f) // 每2秒计算一次
                             {
                                 d.lasttime = d.detatime;
-                                int delta = d.currentCadenceValue - d.lastCadenceValue;
+                                int CrankRevsNum = d.currentCadenceValue - d.lastCadenceValue;
                                 d.lastCadenceValue = cumulativeCrankRevs;
-                                UpdateSpeed(dID, delta); // 把增量映射到速度档位
+                                UpdateSpeed(dID, CrankRevsNum); // 把增量映射到速度档位
                             }
                         }
                     }
@@ -478,7 +479,7 @@ public class Demo : MonoBehaviour
             }
 
 
-            if (isFirstTimeScanningDevices == 4)
+            if (isFirstTimeScanningDevices == 5)
             {
                 //相机跟随第二快的人
                 if (BicycleControllers.Count >= 2)
@@ -510,28 +511,32 @@ public class Demo : MonoBehaviour
                 IsAllConnectTime += Time.deltaTime;
                 if (IsAllConnectTime >= 5)
                 {
-                    ShowTimeTipsText.text = "";
-                    // 找出 discoveredDevices 中有，但 Lingshi_DevicesIDList 中没有的 key
-                    var extraKeys = discoveredDevices.Keys.Except(Lingshi_DevicesIDList);
-                    if (extraKeys.Any())
+                    if (discoveredDevices.Count != 0)
                     {
-                        // 输出对应的 value 值
-                        foreach (var key in extraKeys)
+                        ShowTimeTipsText.text = "";
+                        // 找出 discoveredDevices 中有，但 Lingshi_DevicesIDList 中没有的 key
+                        var extraKeys = discoveredDevices.Keys.Except(Lingshi_DevicesIDList);
+                        if (extraKeys.Any())
                         {
-                            string value = discoveredDevices[key];
-                            Debug.Log($"掉线设备: ID = {key}, 名称 = {value}");
+                            // 输出对应的 value 值
+                            foreach (var key in extraKeys)
+                            {
+                                string value = discoveredDevices[key];
+                                Debug.Log($"掉线设备: ID = {key}, 名称 = {value}");
 
-                            ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
-                            DisconnectViewTrans.gameObject.SetActive(true);
+                                ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
+                                DisconnectViewTrans.gameObject.SetActive(true);
+                            }
+                            HasGetMessage = false;
                         }
-                    }
-                    else
-                    {
-                        Debug.Log("没有掉线的设备");
-                    }
+                        else
+                        {
+                            Debug.Log("没有掉线的设备");
+                        }
 
-                    Lingshi_DevicesIDList.Clear();
-                    IsAllConnectTime = 0;
+                        Lingshi_DevicesIDList.Clear();
+                        IsAllConnectTime = 0;
+                    }
                 }
             }
         }
@@ -651,25 +656,25 @@ public class Demo : MonoBehaviour
             }
         }
     }
-    void UpdateSpeed(string SID, int delta)
+    void UpdateSpeed(string SID, int CrankRevsNum)
     {
-        float speed = 1;
+        float speed = 0;
 
-        if (delta <= 0)
+        if (CrankRevsNum <= 0)
             speed = 0.1f;
-        else if (delta <= 1)
+        else if (CrankRevsNum <= 1)
             speed = 4;
-        else if (delta <= 2)
+        else if (CrankRevsNum <= 2)
             speed = 8;
-        else if (delta <= 3)
+        else if (CrankRevsNum <= 3)
             speed = 12;
-        else if (delta <= 4)
+        else if (CrankRevsNum <= 4)
             speed = 16;
-        else if (delta <= 5)
+        else if (CrankRevsNum <= 5)
             speed = 20;
-        else if (delta <= 6)
+        else if (CrankRevsNum <= 6)
             speed = 25;
-        else if (delta <= 7)
+        else if (CrankRevsNum <= 7)
             speed = 30;
         else
             speed = 30;
@@ -680,6 +685,12 @@ public class Demo : MonoBehaviour
             if (BicycleControllers[i].DeviceID == SID)
             {
                 BicycleControllers[i].topSpeed = speed;
+                if (speed >= 4)
+                {
+                    BicycleControllers[i].enabled = true;
+                    Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
+                    rig.isKinematic = false;
+                }
                 break;
             }
         }
@@ -718,7 +729,7 @@ public class Demo : MonoBehaviour
             StartCoroutine(IEnumTime321ChangeBig(Obj321.GetChild(i).transform));
 
             // 等待 delay 秒
-            yield return new WaitForSeconds(1.1f);
+            yield return new WaitForSeconds(1f);
         }
 
         yield return new WaitForSeconds(0.2f);
@@ -734,7 +745,7 @@ public class Demo : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.1f);
-        isFirstTimeScanningDevices = 4;
+        isFirstTimeScanningDevices = 5;//倒计时结束
 
         //判断是圈数还是时间  -----------------------------------------------判断是圈数还是时间 ----------------------
         if (RoundToggle.isOn)
