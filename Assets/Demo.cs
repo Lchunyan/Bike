@@ -108,8 +108,6 @@ public class Demo : MonoBehaviour
             }
         }
     }
-
-
     private Toggle TimeToggle;
     private InputField InputTimeText;
     private Text TimeCountdown;
@@ -118,6 +116,11 @@ public class Demo : MonoBehaviour
     private Transform SearchDelayTrans;
     private bool IsSameWithLastTime; //重新开始时候判断是否与上一次一致
 
+    //Roundtype的界面
+    private Transform RoundTypeRankShowViewTrans;
+    private Text RoundTypeTimeText;
+    private Text RoundTypeTargetRounText;
+    private Text RoundTypeCurrentRounText;
 
     public GameObject BiycycleStandardTrans;
     public List<GameObject> BicyclePosList;
@@ -125,7 +128,6 @@ public class Demo : MonoBehaviour
     public List<BicycleController> BicycleControllers = new List<BicycleController>();
 
     public BicycleCamera MainCamera;
-
 
     private string relativePath = "Assets/Data/CrankRevsNum.json";
     private CrankDataGroup crankDataGroup;
@@ -168,6 +170,17 @@ public class Demo : MonoBehaviour
         InputTimeText = StartViewTrans.transform.Find("InputTime").Find("InputField (Legacy)").GetComponent<InputField>();
         TimeCountdown = transform.Find("Time_Countdown").Find("time").GetComponent<Text>();
         TimeCountdown.transform.parent.gameObject.SetActive(false);
+
+        RoundTypeRankShowViewTrans = transform.Find("RoundTypeRankShow");
+        Text rounddaytimeText = RoundTypeRankShowViewTrans.Find("ABLAZING").Find("daytime").GetComponent<Text>();
+        DateTime now = DateTime.Now;
+        // 自定义日期格式：日 + 月英文简称 + 年
+        string formattedDate = now.ToString("dd MMM yyyy");
+        rounddaytimeText.text = formattedDate;
+        RoundTypeRankShowViewTrans.gameObject.SetActive(false);
+        RoundTypeTimeText = RoundTypeRankShowViewTrans.Find("Time").Find("time").GetComponent<Text>();
+        RoundTypeTargetRounText = RoundTypeRankShowViewTrans.Find("RoundNum").Find("TargetRoundNum").GetComponent<Text>();
+        RoundTypeCurrentRounText = RoundTypeRankShowViewTrans.Find("RoundNum").Find("CurrentRoundNum").GetComponent<Text>();
 
 
         ///结算界面
@@ -282,6 +295,7 @@ public class Demo : MonoBehaviour
         RestartBtn.gameObject.SetActive(false);
         BackBtn.gameObject.SetActive(false);
         DisconnectViewTrans.gameObject.SetActive(false);
+        RoundTypeRankShowViewTrans.gameObject.SetActive(false);
 
         StartSearchBtn.interactable = true;
 
@@ -464,18 +478,34 @@ public class Demo : MonoBehaviour
                         ushort lastCrankEventTime = BitConverter.ToUInt16(packageReceived, index);
                         index += 2;
                         Debug.Log("设备名称为" + dID + "踏频转速Crank Revs: " + cumulativeCrankRevs + " | Last Time: " + lastCrankEventTime);
-                        //float currentTime = Time.time;
+
+                        //if (CadenceValueDic.ContainsKey(dID))
+                        //{
+                        //    timedate d = CadenceValueDic[dID];
+                        //    d.currentCadenceValue = cumulativeCrankRevs;
+                        //    d.detatime = Time.time;
+                        //    float time = crankDataGroup.BetweenTime;
+                        //    if (d.detatime - d.lasttime >= time) // 每2秒计算一次
+                        //    {
+                        //        d.lasttime = d.detatime;
+                        //        int CrankRevsNum = d.currentCadenceValue - d.lastCadenceValue;
+                        //        d.lastCadenceValue = cumulativeCrankRevs;
+                        //        UpdateSpeed(dID, CrankRevsNum); // 把增量映射到速度档位
+                        //    }
+                        //}
+
                         if (CadenceValueDic.ContainsKey(dID))
                         {
-                            timedate d = CadenceValueDic[dID];
-                            d.currentCadenceValue = cumulativeCrankRevs;
-                            d.detatime = Time.time;
-                            float time = crankDataGroup.BetweenTime;
-                            if (d.detatime - d.lasttime >= time) // 每2秒计算一次
+                            CadenceValueDic[dID].currentCadenceValue = cumulativeCrankRevs;
+                            CadenceValueDic[dID].currentCrankEventTime = Time.time;
+                            Debug.Log(Time.time+ "------------- Time.time");
+                            int jsontime = crankDataGroup.BetweenTime;
+                            if (CadenceValueDic[dID].currentCrankEventTime - CadenceValueDic[dID].lastCrankEventTime >= jsontime) // 每2s 计算一次
                             {
-                                d.lasttime = d.detatime;
-                                int CrankRevsNum = d.currentCadenceValue - d.lastCadenceValue;
-                                d.lastCadenceValue = cumulativeCrankRevs;
+                                int CrankRevsNum = cumulativeCrankRevs - CadenceValueDic[dID].lastCadenceValue;
+
+                                CadenceValueDic[dID].lastCadenceValue = CadenceValueDic[dID].currentCadenceValue;
+                                CadenceValueDic[dID].lastCrankEventTime = CadenceValueDic[dID].currentCrankEventTime;
                                 UpdateSpeed(dID, CrankRevsNum); // 把增量映射到速度档位
                             }
                         }
@@ -484,29 +514,36 @@ public class Demo : MonoBehaviour
             }
 
 
-            if (isFirstTimeScanningDevices == 5)
+            if (isFirstTimeScanningDevices == 5) ///321倒计时结束
             {
-                //相机跟随第二快的人
-                if (BicycleControllers.Count >= 2)
+                SetCameraTime += Time.deltaTime;
+                if (SetCameraTime >= 3)
                 {
-                    SetCameraTime += Time.deltaTime;
-                    if (SetCameraTime >= 3)
+                    // 先对列表按 totalDistance 降序排序
+                    List<BicycleController> sortedList = BicycleControllers
+                        .OrderByDescending(b => b.totalDistance)
+                        .ToList();
+
+                    BicycleController secondFurthest = null;
+                    // 再取第二个元素（下标为 1）
+                    if (sortedList.Count >= 2)
                     {
-                        // 先对列表按 totalDistance 降序排序
-                        List<BicycleController> sortedList = BicycleControllers
-                            .OrderByDescending(b => b.totalDistance)
-                            .ToList();
-
-                        // 再取第二个元素（下标为 1）
-                        if (sortedList.Count >= 2)
-                        {
-                            BicycleController secondFurthest = sortedList[1];
-                            Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
-                            MainCamera.target = secondFurthest.transform;
-                        }
-
-                        SetCameraTime = 0;
+                        secondFurthest = sortedList[1];
+                        Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
+                        MainCamera.target = secondFurthest.transform;
                     }
+                    else
+                    {
+                        secondFurthest = sortedList[0];
+                    }
+
+                    if (RoundToggle.isOn)
+                    {
+                        RoundTypeTargetRounText.text = secondFurthest.TargetRoundIndex.ToString();
+                        RoundTypeCurrentRounText.text = secondFurthest.CurrentRoundIndex.ToString();
+                        0
+                    }
+                    SetCameraTime = 0;
                 }
             }
 
@@ -701,8 +738,7 @@ public class Demo : MonoBehaviour
                 if (speed >= 4)
                 {
                     BicycleControllers[i].enabled = true;
-                    Rigidbody rig = BicycleControllers[i].transform.GetComponent<Rigidbody>();
-                    rig.isKinematic = false;
+                    BicycleControllers[i].rb.isKinematic = false;
                 }
                 break;
             }
@@ -760,7 +796,7 @@ public class Demo : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         isFirstTimeScanningDevices = 5;//倒计时结束
 
-        //判断是圈数还是时间  -----------------------------------------------判断是圈数还是时间 ----------------------
+        //判断是圈数还是时间  -----------------------------------------------                  判断是圈数还是时间 ----------------------
         if (RoundToggle.isOn)
         {
             int input_round = int.Parse(InputRoundText.text);
@@ -769,6 +805,12 @@ public class Demo : MonoBehaviour
                 BicycleControllers[i].TargetRoundIndex = input_round;
                 BicycleControllers[i].StartTimer();
             }
+
+
+            RoundTypeRankShowViewTrans.gameObject.SetActive(true);
+            RoundTypeTargetRounText.text = input_round.ToString();
+            RoundTypeCurrentRounText.text = "0";
+            StartCoroutine(IEnumRoundTypeTime());
         }
         else if (TimeToggle.isOn)
         {
@@ -828,6 +870,28 @@ public class Demo : MonoBehaviour
         StartCoroutine(IEnumCommonOver());
     }
 
+    /// <summary>
+    /// 321之后执行圈数Type的倒计时
+    /// </summary>
+    /// <param name="time"></param>
+    /// <returns></returns>
+    IEnumerator IEnumRoundTypeTime()
+    {
+        float elapsedTime = 0f;
+        while (true)
+        {
+            elapsedTime += Time.deltaTime;
+
+            int hours = Mathf.FloorToInt(elapsedTime / 3600);
+            int minutes = Mathf.FloorToInt((elapsedTime % 3600) / 60);
+            int seconds = Mathf.FloorToInt(elapsedTime % 60);
+
+            RoundTypeTimeText.text = string.Format("{0:D2}:{1:D2}:{2:D2}", hours, minutes, seconds);
+
+            yield return null;
+        }
+    }
+
 
     IEnumerator IEnumCommonOver()
     {
@@ -841,6 +905,7 @@ public class Demo : MonoBehaviour
             timedate tt = new timedate();
             CadenceValueDic[key] = tt;
         }
+        RoundTypeRankShowViewTrans.gameObject.SetActive(false);
         OverViewTrans.SetActive(true);
         DateTime now = DateTime.Now;
         // 自定义日期格式：日 + 月英文简称 + 年
@@ -941,6 +1006,7 @@ public class Demo : MonoBehaviour
             BackBtn.gameObject.SetActive(true);
         }
 
+        StopAllCoroutines();
     }
 
 
@@ -1082,6 +1148,8 @@ public class Demo : MonoBehaviour
 public class timedate
 {
     public float detatime;
+    public float currentCrankEventTime;
+    public float lastCrankEventTime;
     public float lasttime;
     public int currentCadenceValue;
     public int lastCadenceValue;
@@ -1104,6 +1172,6 @@ public class CrankData
 [System.Serializable]
 public class CrankDataGroup
 {
-    public float BetweenTime;
+    public int BetweenTime;
     public List<CrankData> values;
 }

@@ -65,7 +65,9 @@ namespace SBPScripts
         public float totalDistance = 0f;
         // public List<Transform> pathPoints; //每个自行车的路径
         private List<Transform> pathPoints; //每个自行车的路径
+        public int pathPointsCount;
         public int NextGotoPointIndex = 0; //下一个要去的点
+  
 
         public bool useAutoPath;
         public float steerSmoothSpeed = 5f;
@@ -208,6 +210,7 @@ namespace SBPScripts
                 }
                 pathPoints.Add(o.transform);
             }
+            pathPointsCount = pathPoints.Count;
         }
 
         void Start()
@@ -505,7 +508,7 @@ namespace SBPScripts
 
 
             Panduan_DistanceTime += Time.deltaTime;
-            if (Panduan_DistanceTime >= 2)
+            if (Panduan_DistanceTime >= 3)
             {
                 if (totalDistance - LasttotalDistance < 5)
                 {
@@ -524,7 +527,6 @@ namespace SBPScripts
                 groundZ = transform.rotation.eulerAngles.z;
             }
             return groundZ;
-
         }
 
         void ApplyCustomInput()
