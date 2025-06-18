@@ -1,0 +1,45 @@
+{
+  "BetweenTime": 2,
+  "values": [
+    {
+      "CrankRevsNum": 0,
+      "speed": 0.1
+    },
+    {
+      "CrankRevsNum": 1,
+      "speed": 8
+    },
+    {
+      "CrankRevsNum": 2,
+      "speed": 10
+    },
+    {
+      "CrankRevsNum": 3,
+      "speed": 12
+    },
+    {
+      "CrankRevsNum": 4,
+      "speed": 16
+    },
+    {
+      "CrankRevsNum": 5,
+      "speed": 20
+    },
+    {
+      "CrankRevsNum": 6,
+      "speed": 24
+    },
+    {
+      "CrankRevsNum": 7,
+      "speed": 28
+    },
+    {
+      "CrankRevsNum": 8,
+      "speed": 30
+    },
+    {
+      "CrankRevsNum": 9,
+      "speed": 30
+    }
+  ]
+}

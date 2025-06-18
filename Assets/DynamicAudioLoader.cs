@@ -6,7 +6,7 @@ using System.IO;
 
 public class DynamicAudioLoader : MonoBehaviour
 {
-    public string relativeAudioFolder = "Audio"; // 相对 exe 的目录
+    private string relativeAudioFolder = "Data"; // 相对 exe 的目录
     private List<string> audioPaths = new List<string>();
     private int currentIndex = 0;
     private AudioSource audioSource;

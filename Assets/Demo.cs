@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -126,6 +127,8 @@ public class Demo : MonoBehaviour
     public BicycleCamera MainCamera;
 
 
+    private string relativePath = "Assets/Data/CrankRevsNum.json";
+    private CrankDataGroup crankDataGroup;
 
     void Start()
     {
@@ -189,6 +192,7 @@ public class Demo : MonoBehaviour
         discoveredDevices.Clear();
 
         GetPlayerPrefs();
+        LoadJson();
     }
 
     void GetPlayerPrefs()
@@ -466,7 +470,8 @@ public class Demo : MonoBehaviour
                             timedate d = CadenceValueDic[dID];
                             d.currentCadenceValue = cumulativeCrankRevs;
                             d.detatime = Time.time;
-                            if (d.detatime - d.lasttime >= 2f) // 每2秒计算一次
+                            float time = crankDataGroup.BetweenTime;
+                            if (d.detatime - d.lasttime >= time) // 每2秒计算一次
                             {
                                 d.lasttime = d.detatime;
                                 int CrankRevsNum = d.currentCadenceValue - d.lastCadenceValue;
@@ -553,6 +558,10 @@ public class Demo : MonoBehaviour
 #else
     Application.Quit(); // 在打包后的游戏中退出
 #endif
+        }
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            LoadJson();
         }
     }
 
@@ -660,22 +669,26 @@ public class Demo : MonoBehaviour
     {
         float speed = 0;
 
-        if (CrankRevsNum <= 0)
-            speed = 0.1f;
-        else if (CrankRevsNum <= 1)
-            speed = 4;
-        else if (CrankRevsNum <= 2)
-            speed = 8;
-        else if (CrankRevsNum <= 3)
-            speed = 12;
-        else if (CrankRevsNum <= 4)
-            speed = 16;
-        else if (CrankRevsNum <= 5)
-            speed = 20;
-        else if (CrankRevsNum <= 6)
-            speed = 25;
-        else if (CrankRevsNum <= 7)
-            speed = 30;
+        if (CrankRevsNum <= crankDataGroup.values[0].CrankRevsNum)
+            speed = crankDataGroup.values[0].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[1].CrankRevsNum)
+            speed = crankDataGroup.values[1].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[2].CrankRevsNum)
+            speed = crankDataGroup.values[2].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[3].CrankRevsNum)
+            speed = crankDataGroup.values[3].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[4].CrankRevsNum)
+            speed = crankDataGroup.values[4].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[5].CrankRevsNum)
+            speed = crankDataGroup.values[5].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[6].CrankRevsNum)
+            speed = crankDataGroup.values[6].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[7].CrankRevsNum)
+            speed = crankDataGroup.values[7].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[8].CrankRevsNum)
+            speed = crankDataGroup.values[8].speed;
+        else if (CrankRevsNum <= crankDataGroup.values[9].CrankRevsNum)
+            speed = crankDataGroup.values[9].speed;
         else
             speed = 30;
 
@@ -1033,6 +1046,34 @@ public class Demo : MonoBehaviour
     {
         InitDevices();
     }
+    void LoadJson()
+    {
+        string jsonPath;
+
+#if UNITY_EDITOR
+        // 编辑器中：直接从 Assets 开始
+        jsonPath = Path.Combine(Application.dataPath, "Data/CrankRevsNum.json");
+#else
+    // 打包后：使用 exe 同目录的 Data 文件夹
+    jsonPath = Path.Combine(Application.dataPath, "..", "Data", "CrankRevsNum.json");
+#endif
+
+        if (!File.Exists(jsonPath))
+        {
+            Debug.LogError("找不到 JSON 文件: " + Path.GetFullPath(jsonPath));
+            return;
+        }
+
+        string json = File.ReadAllText(jsonPath);
+        crankDataGroup = JsonUtility.FromJson<CrankDataGroup>(json);
+
+        Debug.Log($"读取成功 BetweenTime: {crankDataGroup.BetweenTime}");
+        foreach (var item in crankDataGroup.values)
+        {
+            Debug.Log($"CrankRevsNum: {item.CrankRevsNum}, speed: {item.speed}");
+        }
+    }
+
 
 
 }
@@ -1044,5 +1085,25 @@ public class timedate
     public float lasttime;
     public int currentCadenceValue;
     public int lastCadenceValue;
+}
 
+
+
+
+
+
+
+
+[System.Serializable]
+public class CrankData
+{
+    public int CrankRevsNum;
+    public float speed;
+}
+
+[System.Serializable]
+public class CrankDataGroup
+{
+    public float BetweenTime;
+    public List<CrankData> values;
 }
