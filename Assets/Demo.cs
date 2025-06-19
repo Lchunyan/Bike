@@ -75,6 +75,7 @@ public class Demo : MonoBehaviour
     private GameObject StartViewTrans;
     private Transform Obj321;
 
+    public Text ShowCurrentDeviceNameText;
     //结算界面
     private GameObject OverViewTrans;
     private Transform RankTrans;
@@ -132,6 +133,8 @@ public class Demo : MonoBehaviour
     void Start()
     {
         StartViewTrans = transform.Find("StartView").gameObject;//StartView  StartView
+        ShowCurrentDeviceNameText = transform.Find("ShowCurrentDeviceName").Find("ShowCurrentDeviceName").GetComponent<Text>();//StartView  StartView 
+        ShowCurrentDeviceNameText.transform.parent.gameObject.SetActive(false);
         Obj321 = transform.Find("321");
         Obj321.gameObject.SetActive(false);
         SearchDelayTrans = StartViewTrans.transform.Find("SearchDelay").Find("SearchDelayRound");
@@ -284,6 +287,7 @@ public class Demo : MonoBehaviour
     /// </summary>
     private void InitDevices()
     {
+        ShowCurrentDeviceNameText.transform.parent.gameObject.SetActive(false);
         TimeCountdown.transform.parent.gameObject.SetActive(false);
         OverViewTrans.gameObject.SetActive(false);
         StartViewTrans.gameObject.SetActive(true);
@@ -474,7 +478,7 @@ public class Demo : MonoBehaviour
                         index += 2;
                         ushort lastCrankEventTime = BitConverter.ToUInt16(packageReceived, index);
                         index += 2;
-                        Debug.Log("设备名称为" + dID + "踏频转速Crank Revs: " + cumulativeCrankRevs + " | Last Time: " + lastCrankEventTime);
+                        //Debug.Log("设备名称为" + dID + "踏频转速Crank Revs: " + cumulativeCrankRevs + " | Last Time: " + lastCrankEventTime);
 
                         //if (CadenceValueDic.ContainsKey(dID))
                         //{
@@ -495,7 +499,6 @@ public class Demo : MonoBehaviour
                         {
                             CadenceValueDic[dID].currentCadenceValue = cumulativeCrankRevs;
                             CadenceValueDic[dID].currentCrankEventTime = Time.time;
-                            Debug.Log(Time.time+ "------------- Time.time");
                             int jsontime = crankDataGroup.BetweenTime;
                             if (CadenceValueDic[dID].currentCrankEventTime - CadenceValueDic[dID].lastCrankEventTime >= jsontime) // 每2s 计算一次
                             {
@@ -531,6 +534,9 @@ public class Demo : MonoBehaviour
                         Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
                         //MainCamera.target = secondFurthest.transform;
                         MainCamera.SetTarget(secondFurthest.transform);
+
+                        ShowCurrentDeviceNameText.transform.parent.gameObject.SetActive(true);
+                        ShowCurrentDeviceNameText.text = secondFurthest.DeviceName;
                     }
                     else
                     {
@@ -791,7 +797,7 @@ public class Demo : MonoBehaviour
             yield return new WaitForSeconds(1.1f);
         }
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.3f);
         Obj321.gameObject.SetActive(false);
         isSubscribed = true;
         for (int i = 0; i < BicycleControllers.Count; i++)
@@ -816,7 +822,7 @@ public class Demo : MonoBehaviour
                 BicycleControllers[i].StartTimer();
             }
 
-     
+
             RoundTypeRankShowViewTrans.gameObject.SetActive(true);
             RoundTypeTargetRounText.text = input_round.ToString();
             RoundTypeCurrentRounText.text = "0";
@@ -916,6 +922,7 @@ public class Demo : MonoBehaviour
             timedate tt = new timedate();
             CadenceValueDic[key] = tt;
         }
+        ShowCurrentDeviceNameText.transform.parent.gameObject.SetActive(false);
         RoundTypeRankShowViewTrans.gameObject.SetActive(false);
         OverViewTrans.SetActive(true);
         RoundDistanceDic.Clear();

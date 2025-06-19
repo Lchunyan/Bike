@@ -7,31 +7,31 @@
     },
     {
       "CrankRevsNum": 1,
-      "speed": 2
+      "speed": 4
     },
     {
       "CrankRevsNum": 2,
-      "speed": 8
-    },
-    {
-      "CrankRevsNum": 3,
       "speed": 12
     },
     {
-      "CrankRevsNum": 4,
+      "CrankRevsNum": 3,
       "speed": 16
     },
     {
+      "CrankRevsNum": 4,
+      "speed": 18
+    },
+    {
       "CrankRevsNum": 5,
-      "speed": 20
+      "speed": 25
     },
     {
       "CrankRevsNum": 6,
-      "speed": 24
+      "speed": 25
     },
     {
       "CrankRevsNum": 7,
-      "speed": 28
+      "speed": 30
     },
     {
       "CrankRevsNum": 8,
