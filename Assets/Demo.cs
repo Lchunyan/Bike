@@ -499,6 +499,8 @@ public class Demo : MonoBehaviour
                             int jsontime = crankDataGroup.BetweenTime;
                             if (CadenceValueDic[dID].currentCrankEventTime - CadenceValueDic[dID].lastCrankEventTime >= jsontime) // 每2s 计算一次
                             {
+                                if (CadenceValueDic[dID].lastCadenceValue == 0)
+                                    CadenceValueDic[dID].lastCadenceValue = cumulativeCrankRevs - 5;
                                 int CrankRevsNum = cumulativeCrankRevs - CadenceValueDic[dID].lastCadenceValue;
 
                                 CadenceValueDic[dID].lastCadenceValue = CadenceValueDic[dID].currentCadenceValue;
