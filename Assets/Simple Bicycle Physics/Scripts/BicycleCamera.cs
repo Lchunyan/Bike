@@ -49,7 +49,7 @@ namespace SBPScripts
             // ≥ı ºªØ currentTarget
             GameObject temp = new GameObject("CurrentTargetProxy");
             currentTarget = temp.transform;
-            //currentTarget.position = target.position;
+            currentTarget.position = transform.position;
             //currentTarget.rotation = target.rotation;
         }
 
