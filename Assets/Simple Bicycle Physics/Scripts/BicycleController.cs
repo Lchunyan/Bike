@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using UnityEngine.Rendering;
 using UnityEngine.SocialPlatforms;
 
 // Please use using SBPScripts; directive to refer to or append the SBP library
@@ -78,7 +79,7 @@ namespace SBPScripts
         public float AllTime;
         public int CurrentRoundIndex = 0;
         public int TargetRoundIndex = 0;
-        private bool isRoundRunning = false;
+        public bool isRoundRunning = false;
 
         private Demo demo;
         private float Panduan_DistanceTime;
@@ -508,7 +509,7 @@ namespace SBPScripts
 
 
             Panduan_DistanceTime += Time.deltaTime;
-            if (Panduan_DistanceTime >= 3)
+            if (Panduan_DistanceTime >= 5)
             {
                 if (totalDistance - LasttotalDistance < 5)
                 {
@@ -563,11 +564,19 @@ namespace SBPScripts
                     {
                         NextGotoPointIndex = 0;
                         Debug.Log(NextGotoPointIndex + "--------");
-                        if(isRoundRunning)
+
+                        CurrentRoundIndex++;
+                        //一圈之后记录第一个的dis  以便后面同步
+                        if (!demo.RoundDistanceDic.ContainsKey(CurrentRoundIndex))
+                            demo.RoundDistanceDic.Add(CurrentRoundIndex, totalDistance);
+                        else
+                            totalDistance = demo.RoundDistanceDic[CurrentRoundIndex];
+
+                        if (isRoundRunning)
                         {
-                            CurrentRoundIndex++;
                             if (TargetRoundIndex != 0 && CurrentRoundIndex == TargetRoundIndex)
                             {
+                                topSpeed = 1;
                                 isRoundRunning = false;
                                 CurrentRoundIndex = 0;
                                 demo.RoundOverNum++;

@@ -13,7 +13,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 public class Demo : MonoBehaviour
 {
@@ -59,6 +58,8 @@ public class Demo : MonoBehaviour
     private float IsAllConnectTime = 0f;
     List<string> Lingshi_DevicesIDList = new List<string>();
 
+    //一圈之后记录第一个的dis  以便后面同步
+    public Dictionary<int, float> RoundDistanceDic = new Dictionary<int, float>(); 
 
 
 
@@ -95,11 +96,6 @@ public class Demo : MonoBehaviour
         set
         {
             roundovernum = value;
-            for (int i = 0; i < BicycleControllers.Count; i++)
-            {
-                BicycleControllers[i].totalDistance = BicycleControllers[0].totalDistance;
-            }
-
             if (value == BicycleControllers.Count)
             {
                 //结束
@@ -121,6 +117,7 @@ public class Demo : MonoBehaviour
     private Text RoundTypeTimeText;
     private Text RoundTypeTargetRounText;
     private Text RoundTypeCurrentRounText;
+    private Scrollbar RoundTypeScorebar;
 
     public GameObject BiycycleStandardTrans;
     public List<GameObject> BicyclePosList;
@@ -181,7 +178,7 @@ public class Demo : MonoBehaviour
         RoundTypeTimeText = RoundTypeRankShowViewTrans.Find("Time").Find("time").GetComponent<Text>();
         RoundTypeTargetRounText = RoundTypeRankShowViewTrans.Find("RoundNum").Find("TargetRoundNum").GetComponent<Text>();
         RoundTypeCurrentRounText = RoundTypeRankShowViewTrans.Find("RoundNum").Find("CurrentRoundNum").GetComponent<Text>();
-
+        RoundTypeScorebar = RoundTypeRankShowViewTrans.Find("PerRoundScrollbar").GetComponent<Scrollbar>();
 
         ///结算界面
         OverViewTrans = transform.Find("OverView").gameObject;
@@ -287,7 +284,7 @@ public class Demo : MonoBehaviour
     /// </summary>
     private void InitDevices()
     {
-        TimeCountdown.gameObject.SetActive(false);
+        TimeCountdown.transform.parent.gameObject.SetActive(false);
         OverViewTrans.gameObject.SetActive(false);
         StartViewTrans.gameObject.SetActive(true);
 
@@ -530,7 +527,8 @@ public class Demo : MonoBehaviour
                     {
                         secondFurthest = sortedList[1];
                         Debug.Log("第二远的是: " + secondFurthest.DeviceID + "，距离为: " + secondFurthest.totalDistance);
-                        MainCamera.target = secondFurthest.transform;
+                        //MainCamera.target = secondFurthest.transform;
+                        MainCamera.SetTarget(secondFurthest.transform);
                     }
                     else
                     {
@@ -541,7 +539,8 @@ public class Demo : MonoBehaviour
                     {
                         RoundTypeTargetRounText.text = secondFurthest.TargetRoundIndex.ToString();
                         RoundTypeCurrentRounText.text = secondFurthest.CurrentRoundIndex.ToString();
-                        0
+                        float size = (float)(secondFurthest.pathPointsCount - secondFurthest.NextGotoPointIndex) / (float)secondFurthest.pathPointsCount;
+                        RoundTypeScorebar.size = size;
                     }
                     SetCameraTime = 0;
                 }
@@ -568,6 +567,7 @@ public class Demo : MonoBehaviour
 
                                 ShowTimeTipsText.text += $"\n{value}设备断开连接，请重新查找并连接";
                                 DisconnectViewTrans.gameObject.SetActive(true);
+                                StopAllCoroutines();
                             }
                             HasGetMessage = false;
                         }
@@ -622,7 +622,8 @@ public class Demo : MonoBehaviour
             BicycleControllers.Add(con);
             if (LDex == 0)
             {
-                MainCamera.target = BiycycleObj.transform;
+                MainCamera.SetTarget(BiycycleObj.transform);
+                //MainCamera.target = BiycycleObj.transform;
             }
             LDex++;
             yield return new WaitForSeconds(0.1f);
@@ -734,8 +735,15 @@ public class Demo : MonoBehaviour
         {
             if (BicycleControllers[i].DeviceID == SID)
             {
+                if (RoundToggle.isOn)
+                {
+                    if (!BicycleControllers[i].isRoundRunning)
+                    {
+                        break;
+                    }
+                }
                 BicycleControllers[i].topSpeed = speed;
-                if (speed >= 4)
+                if (speed >= 1)
                 {
                     BicycleControllers[i].enabled = true;
                     BicycleControllers[i].rb.isKinematic = false;
@@ -778,10 +786,10 @@ public class Demo : MonoBehaviour
             StartCoroutine(IEnumTime321ChangeBig(Obj321.GetChild(i).transform));
 
             // 等待 delay 秒
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1.1f);
         }
 
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.1f);
         Obj321.gameObject.SetActive(false);
         isSubscribed = true;
         for (int i = 0; i < BicycleControllers.Count; i++)
@@ -806,10 +814,11 @@ public class Demo : MonoBehaviour
                 BicycleControllers[i].StartTimer();
             }
 
-
+     
             RoundTypeRankShowViewTrans.gameObject.SetActive(true);
             RoundTypeTargetRounText.text = input_round.ToString();
             RoundTypeCurrentRounText.text = "0";
+            RoundTypeScorebar.size = 1;
             StartCoroutine(IEnumRoundTypeTime());
         }
         else if (TimeToggle.isOn)
@@ -907,6 +916,7 @@ public class Demo : MonoBehaviour
         }
         RoundTypeRankShowViewTrans.gameObject.SetActive(false);
         OverViewTrans.SetActive(true);
+        RoundDistanceDic.Clear();
         DateTime now = DateTime.Now;
         // 自定义日期格式：日 + 月英文简称 + 年
         string formattedDate = now.ToString("dd MMM yyyy");
