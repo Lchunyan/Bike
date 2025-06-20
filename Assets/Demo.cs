@@ -418,9 +418,6 @@ public class Demo : MonoBehaviour
             BleApi.BLEData res = new BleApi.BLEData();
             while (BleApi.PollData(out res, false))
             {
-                //subcribeText.text = BitConverter.ToString(res.buf, 0, res.size);
-                // subcribeText.text = Encoding.ASCII.GetString(res.buf, 0, res.size);
-
                 byte[] packageReceived = res.buf;
                 string dID = res.deviceId;
 
@@ -738,7 +735,7 @@ public class Demo : MonoBehaviour
         else
             speed = 30;
 
-        Debug.Log(SID + "--的speed---------" + speed);
+       // Debug.Log(SID + "--的speed---------" + speed);
         for (int i = 0; i < BicycleControllers.Count; i++)
         {
             if (BicycleControllers[i].DeviceID == SID)
@@ -772,7 +769,6 @@ public class Demo : MonoBehaviour
 
     IEnumerator IEnumShowOneChildAt321Time()
     {
-        yield return new WaitForSeconds(0.1f);
         StartViewTrans.SetActive(false);
 
         RestartBtn.gameObject.SetActive(false);
@@ -868,7 +864,6 @@ public class Demo : MonoBehaviour
     {
         TimeCountdown.transform.parent.gameObject.SetActive(true);
         float totalSeconds = time * 60;
-        Debug.Log(totalSeconds + "totalSeconds--------------------------");
 
         while (totalSeconds > 0)
         {
@@ -1159,7 +1154,30 @@ public class Demo : MonoBehaviour
         }
     }
 
+    public void Write()
+    {
+        BleApi.BLEData data = new BleApi.BLEData();
+        data.buf = new byte[2];
 
+        // 开启 Notify: 0x01 0x00
+        data.buf[0] = 0x01;
+        data.buf[1] = 0x00;
+        data.size = 2;
+
+        string deviceID = "";
+        foreach (string DeviceID in discoveredDevices.Keys)
+        {
+            deviceID = DeviceID;
+            break;
+        }
+
+        data.deviceId = deviceID;
+        data.serviceUuid = "0000180F-0000-1000-8000-00805f9b34fb";        // Battery Service
+        data.characteristicUuid = "00002902-0000-1000-8000-00805f9b34fb"; // 🔥 CCC Descriptor
+
+        BleApi.SendData(in data, false); // false 表示不需要 response（如果你想更可靠，用 true）
+        Debug.Log("已尝试写入 CCC，请求开启电量通知");
+    }
 
 }
 

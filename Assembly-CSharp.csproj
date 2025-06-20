@@ -75,9 +75,10 @@
     <Compile Include="Assets\Simple Bicycle Physics\Scripts\CyclistAnimController.cs" />
     <Compile Include="Assets\Simple Bicycle Physics\Scripts\RagdollJointImitation.cs" />
     <Compile Include="Assets\Samples\Splines\2.5.2\Spline Examples (requires Shader Graph package)\Runtime\Car.cs" />
+    <Compile Include="Assets\GetDeviceName.cs" />
     <Compile Include="Assets\Simple Bicycle Physics\Scripts\BicycleSounds.cs" />
+    <Compile Include="Assets\SetFps.cs" />
     <Compile Include="Assets\Samples\Splines\2.5.2\Spline Examples (requires Shader Graph package)\Runtime\DriftSplineData.cs" />
-    <Compile Include="Assets\NewBehaviourScript.cs" />
     <Compile Include="Assets\Simple Bicycle Physics\Scripts\TPSCamSwitch.cs" />
     <Compile Include="Assets\Simple Bicycle Physics\Scripts\BicycleController.cs" />
     <Compile Include="Assets\ProceduralTerrainPainter\Runtime\Modifiers\TextureMask.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="Assets\Samples\Splines\2.5.2\Spline Examples (requires Shader Graph package)\Runtime\LoftRoadBehaviour.cs" />
     <Compile Include="Assets\Samples\Splines\2.5.2\Spline Examples (requires Shader Graph package)\Runtime\NPCSplinePathExample.cs" />
     <Compile Include="Assets\Samples\Splines\2.5.2\Spline Examples (requires Shader Graph package)\Runtime\PaintUI.cs" />
+    <Compile Include="Assets\DynamicAudioLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
